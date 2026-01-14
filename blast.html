@@ -14,9 +14,10 @@ body{
 }
 
 a{
-  text-decoration:none;
   display:inline-block;
   margin-bottom:8px;
+  text-decoration:none;
+  color:#333;
 }
 
 .top{
@@ -28,9 +29,9 @@ a{
 
 .panel{
   background:white;
-  padding:6px 10px;
-  border-radius:12px;
-  box-shadow:0 2px 6px rgba(0,0,0,.2);
+  padding:6px 12px;
+  border-radius:14px;
+  box-shadow:0 3px 8px rgba(0,0,0,.2);
   font-size:14px;
 }
 
@@ -43,64 +44,42 @@ a{
 .cell{
   width:42px;
   height:42px;
-  border-radius:10px;
+  border-radius:12px;
   cursor:pointer;
-  transition:transform .15s;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  font-weight:bold;
+  color:white;
+
+  transition:transform .2s, opacity .4s;
 }
 
-.cell:active{
-  transform:scale(0.92);
+.cell.remove{
+  opacity:0;
+  transform:scale(0.3);
 }
 
 /* colors */
 .red{background:#ff7675;}
 .blue{background:#74b9ff;}
-.yellow{background:#ffeaa7;}
+.yellow{background:#ffeaa7; color:#444;}
 .green{background:#55efc4;}
 .purple{background:#a29bfe;}
 
 /* specials */
 .rocket{
-  background:#fd79a8;
-  position:relative;
+  background:linear-gradient(135deg,#fd79a8,#e84393);
 }
-.rocket::after{
-  content:"🚀";
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:22px;
-}
-
 .bomb{
-  background:#2d3436;
-  position:relative;
-}
-.bomb::after{
-  content:"💣";
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:22px;
-}
-
-/* fade animation */
-.fade{
-  animation:fadeOut .45s ease-out forwards;
-}
-
-@keyframes fadeOut{
-  from{opacity:1;transform:scale(1);}
-  to{opacity:0;transform:scale(.3);}
+  background:radial-gradient(circle,#555,#000);
 }
 
 #msg{
-  margin-top:10px;
-  font-size:18px;
+  font-size:20px;
+  margin-top:12px;
 }
 </style>
 </head>
@@ -128,6 +107,12 @@ const STAGES=[
 
 let stage=0;
 let board=[],ROWS,COLS,COLORS,movesLeft,goal;
+
+/* ===== LOAD SAVED STAGE ===== */
+const savedStage = localStorage.getItem("blastStage");
+if(savedStage !== null){
+  stage = parseInt(savedStage,10);
+}
 
 /* ===== INIT ===== */
 function randColor(){
@@ -171,6 +156,10 @@ function draw(){
     row.forEach((cell,c)=>{
       const d=document.createElement("div");
       d.className="cell "+(cell.type==="color"?cell.value:cell.type);
+
+      if(cell.type==="rocket") d.textContent="🚀";
+      if(cell.type==="bomb") d.textContent="💣";
+
       d.onclick=()=>tap(r,c);
       g.appendChild(d);
     });
@@ -198,7 +187,6 @@ function tap(r,c){
   else if(group.length>=4) special="rocket";
 
   group.forEach(([x,y])=>{
-    markFade(x,y);
     if(goal[board[x][y].value]>0) goal[board[x][y].value]--;
     board[x][y]=null;
   });
@@ -208,11 +196,8 @@ function tap(r,c){
     board[x][y]={type:special};
   }
 
-  setTimeout(()=>{
-    collapse();
-    refill();
-  },450);
-
+  collapse();
+  refill();
   useMove();
 }
 
@@ -230,33 +215,25 @@ function flood(r,c,color,group,seen){
 }
 
 function activate(r,c,type){
+  board[r][c]=null;
+
   if(type==="rocket"){
-    for(let i=0;i<COLS;i++){ markFade(r,i); board[r][i]=null; }
-    for(let i=0;i<ROWS;i++){ markFade(i,c); board[i][c]=null; }
+    for(let i=0;i<COLS;i++) board[r][i]=null;
+    for(let i=0;i<ROWS;i++) board[i][c]=null;
   }
 
   if(type==="bomb"){
-    for(let dr=-2;dr<=2;dr++){
+    for(let dr=-2;dr<=2;dr++)
       for(let dc=-2;dc<=2;dc++){
         const nr=r+dr,nc=c+dc;
         if(nr>=0&&nc>=0&&nr<ROWS&&nc<COLS){
-          markFade(nr,nc);
           board[nr][nc]=null;
         }
       }
-    }
   }
 
-  setTimeout(()=>{
-    collapse();
-    refill();
-  },450);
-}
-
-function markFade(r,c){
-  const idx=r*COLS+c;
-  const el=document.getElementById("grid").children[idx];
-  if(el) el.classList.add("fade");
+  collapse();
+  refill();
 }
 
 function collapse(){
@@ -287,17 +264,21 @@ function useMove(){
 function checkClear(){
   if(Object.values(goal).every(v=>v<=0)){
     stage++;
+    localStorage.setItem("blastStage",stage);
+
     if(stage<STAGES.length){
       setTimeout(initStage,800);
     }else{
       document.getElementById("msg").textContent="🏆 ALL CLEAR!";
+      localStorage.removeItem("blastStage");
     }
-  }else if(movesLeft<=0){
+  }
+  else if(movesLeft<=0){
     document.getElementById("msg").textContent="💥 FAILED";
   }
 }
 
-/* START */
+/* ===== START ===== */
 initStage();
 </script>
 
