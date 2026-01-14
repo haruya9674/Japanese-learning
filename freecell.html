@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>FreeCell</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  font-family: system-ui, sans-serif;
+  background: linear-gradient(180deg,#e8f4ff,#fff);
+  text-align: center;
+  padding: 15px;
+}
+
+a {
+  text-decoration: none;
+  color: #333;
+}
+
+.menu, .game {
+  max-width: 420px;
+  margin: auto;
+}
+
+h1 { margin-bottom: 10px; }
+
+.level-btn {
+  display: block;
+  margin: 12px 0;
+  padding: 16px;
+  font-size: 18px;
+  border-radius: 16px;
+  background: white;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.board {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.cell {
+  width: 60px;
+  min-height: 80px;
+  border-radius: 10px;
+  background: #ffffffcc;
+  box-shadow: inset 0 0 0 2px #ccc;
+  padding: 4px;
+}
+
+.tableau {
+  display: flex;
+  gap: 6px;
+}
+
+.stack {
+  width: 48px;
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  padding: 6px 0;
+  margin-top: -40px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  font-size: 16px;
+}
+
+.red { color: crimson; }
+.black { color: black; }
+
+.selected {
+  outline: 3px solid #4da3ff;
+}
+
+.back {
+  margin: 10px 0;
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: white;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+</style>
+</head>
+
+<body>
+
+<div class="menu" id="menu">
+  <h1>🃏 FreeCell</h1>
+  <div class="level-btn" onclick="start(1)">🟢 Easy (Kids)</div>
+  <div class="level-btn" onclick="start(2)">🟡 Normal</div>
+  <div class="level-btn" onclick="start(3)">🔴 Hard (Adult)</div>
+  <a href="index.html" class="back">← Play Menu</a>
+</div>
+
+<div class="game" id="game" style="display:none">
+  <a class="back" onclick="backMenu()">← Level Select</a>
+  <div class="board">
+    <div id="freecells" class="board"></div>
+    <div id="goals" class="board"></div>
+  </div>
+  <div class="tableau" id="tableau"></div>
+</div>
+
+<script>
+let level = 1;
+let freeCount = 4;
+let freecells = [];
+let goals = [];
+let tableau = [];
+let selected = null;
+
+const suits = ["♠","♥","♦","♣"];
+const colors = { "♠":"black","♣":"black","♥":"red","♦":"red" };
+
+function start(lv){
+  level = lv;
+  freeCount = lv === 3 ? 2 : 4;
+  document.getElementById("menu").style.display="none";
+  document.getElementById("game").style.display="block";
+  init();
+}
+
+function backMenu(){
+  document.getElementById("game").style.display="none";
+  document.getElementById("menu").style.display="block";
+}
+
+function init(){
+  let deck = [];
+  suits.forEach(s=>{
+    for(let n=1;n<=13;n++){
+      deck.push({n,s,c:colors[s]});
+    }
+  });
+  deck.sort(()=>Math.random()-0.5);
+
+  freecells = Array(freeCount).fill(null);
+  goals = Array(4).fill([]);
+  tableau = Array.from({length:8},()=>[]);
+
+  deck.forEach((c,i)=>tableau[i%8].push(c));
+  render();
+}
+
+function render(){
+  const f = document.getElementById("freecells");
+  const g = document.getElementById("goals");
+  const t = document.getElementById("tableau");
+  f.innerHTML=""; g.innerHTML=""; t.innerHTML="";
+
+  freecells.forEach((c,i)=>{
+    const d=document.createElement("div");
+    d.className="cell";
+    if(c) d.appendChild(cardEl(c));
+    d.onclick=()=>select({type:"free",i});
+    f.appendChild(d);
+  });
+
+  goals.forEach((arr,i)=>{
+    const d=document.createElement("div");
+    d.className="cell";
+    if(arr.length) d.appendChild(cardEl(arr[arr.length-1]));
+    d.onclick=()=>select({type:"goal",i});
+    g.appendChild(d);
+  });
+
+  tableau.forEach((arr,i)=>{
+    const s=document.createElement("div");
+    s.className="stack";
+    arr.forEach((c,idx)=>{
+      const el=cardEl(c);
+      if(idx===arr.length-1 && selected?.ref?.type==="tab" && selected.ref.i===i)
+        el.classList.add("selected");
+      el.onclick=()=>select({type:"tab",i});
+      s.appendChild(el);
+    });
+    t.appendChild(s);
+  });
+}
+
+function cardEl(c){
+  const d=document.createElement("div");
+  d.className=`card ${c.c}`;
+  d.textContent = (c.n===1?"A":c.n===11?"J":c.n===12?"Q":c.n===13?"K":c.n)+c.s;
+  return d;
+}
+
+function select(ref){
+  if(!selected){
+    const c=getTop(ref);
+    if(c) selected={card:c,ref};
+  }else{
+    move(ref);
+    selected=null;
+  }
+  render();
+}
+
+function getTop(ref){
+  if(ref.type==="free") return freecells[ref.i];
+  if(ref.type==="goal") return goals[ref.i].slice(-1)[0];
+  if(ref.type==="tab") return tableau[ref.i].slice(-1)[0];
+}
+
+function move(to){
+  const from=selected.ref;
+  const card=selected.card;
+
+  if(to.type==="free" && freecells[to.i]==null){
+    freecells[to.i]=card;
+    remove(from);
+  }
+
+  if(to.type==="tab"){
+    const top=tableau[to.i].slice(-1)[0];
+    if(!top ||
+      (level===1 && card.n===top.n-1) ||
+      (level>=2 && card.n===top.n-1 && card.c!==top.c)){
+        tableau[to.i].push(card);
+        remove(from);
+    }
+  }
+
+  if(to.type==="goal"){
+    const arr=goals[to.i];
+    const top=arr.slice(-1)[0];
+    if((!top && card.n===1) ||
+      (top && card.n===top.n+1 && (level<3 || card.s===top.s))){
+        arr.push(card);
+        remove(from);
+    }
+  }
+}
+
+function remove(ref){
+  if(ref.type==="free") freecells[ref.i]=null;
+  if(ref.type==="goal") goals[ref.i].pop();
+  if(ref.type==="tab") tableau[ref.i].pop();
+}
+</script>
+
+</body>
+</html>
