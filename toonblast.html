@@ -1,192 +1,176 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>Block Blast</title>
+<title>Blast Game</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
 body{
-  font-family:system-ui,sans-serif;
-  background:linear-gradient(180deg,#fff3d6,#e6f3ff);
+  font-family:system-ui;
+  background:#f4f8ff;
   text-align:center;
-  padding:14px;
+  padding:15px;
 }
-
-a.back{
-  display:inline-block;
-  margin-bottom:10px;
-  padding:8px 14px;
-  background:white;
-  border-radius:14px;
-  text-decoration:none;
-  color:#333;
-  box-shadow:0 2px 6px rgba(0,0,0,0.2);
-}
-
-h1{ margin:6px 0 10px; }
-
+h1{margin:5px}
+#level{font-size:14px;color:#555}
 .grid{
   display:grid;
   grid-template-columns:repeat(8,1fr);
   gap:6px;
   max-width:360px;
-  margin:0 auto;
+  margin:20px auto;
 }
-
-.block{
-  width:40px;
+.cell{
   height:40px;
   border-radius:10px;
-  box-shadow:0 3px 6px rgba(0,0,0,0.25);
-  cursor:pointer;
-}
-
-.red{background:#ff6b6b;}
-.blue{background:#4dabf7;}
-.green{background:#51cf66;}
-.yellow{background:#ffd43b;}
-.purple{background:#9775fa;}
-
-.bomb{
-  background:black;
-  color:white;
-  font-size:20px;
   display:flex;
   align-items:center;
   justify-content:center;
+  font-size:22px;
+  color:#fff;
+  font-weight:bold;
+}
+.red{background:#ff6b6b}
+.blue{background:#4dabf7}
+.green{background:#51cf66}
+.yellow{background:#fcc419;color:#333}
+.rocket{background:#845ef7}
+.bomb{background:#212529}
+.empty{background:#dee2e6}
+button{
+  padding:10px 18px;
+  border:none;
+  border-radius:14px;
+  background:white;
+  box-shadow:0 3px 8px rgba(0,0,0,.2);
 }
 </style>
 </head>
 
 <body>
 
-<a href="index.html" class="back">← Play Menu</a>
-<h1>💥 Block Blast</h1>
-
+<h1>💥 Blast Game</h1>
+<div id="level"></div>
 <div class="grid" id="grid"></div>
+<button onclick="nextLevel()">▶ Next Level</button>
 
 <script>
-const ROWS=8, COLS=8;
-const colors=["red","blue","green","yellow","purple"];
+const size=8;
+const colors=["red","blue","green","yellow"];
 let board=[];
+let level=1;
 
-function randColor(){
-  return colors[Math.floor(Math.random()*colors.length)];
-}
-
-function init(){
+function createLevel(){
   board=[];
-  for(let r=0;r<ROWS;r++){
-    board[r]=[];
-    for(let c=0;c<COLS;c++){
-      board[r][c]={type:"color",value:randColor()};
-    }
+  for(let i=0;i<size*size;i++){
+    board.push({color:colors[Math.floor(Math.random()*colors.length)],type:"normal"});
   }
   draw();
 }
 
 function draw(){
+  document.getElementById("level").textContent="Level "+level;
   const g=document.getElementById("grid");
   g.innerHTML="";
-  for(let r=0;r<ROWS;r++){
-    for(let c=0;c<COLS;c++){
-      const cell=board[r][c];
-      const d=document.createElement("div");
-      d.className="block";
-
-      if(cell.type==="bomb"){
-        d.classList.add("bomb");
-        d.textContent="💣";
-      }else{
-        d.classList.add(cell.value);
-      }
-
-      d.onclick=()=>clickCell(r,c);
-      g.appendChild(d);
-    }
-  }
-}
-
-function clickCell(r,c){
-  const cell=board[r][c];
-  if(cell.type==="bomb"){
-    explode(r,c);
-    return;
-  }
-
-  const group=findGroup(r,c,cell.value,{});
-  if(group.length<2) return;
-
-  if(group.length>=4){
-    board[r][c]={type:"bomb"};
-    group.forEach(p=>{
-      if(!(p.r===r && p.c===c)) board[p.r][p.c]=null;
-    });
-  }else{
-    group.forEach(p=>board[p.r][p.c]=null);
-  }
-
-  fall();
-  refill();
-  draw();
-}
-
-function findGroup(r,c,color,visited){
-  const key=r+","+c;
-  if(
-    r<0||c<0||r>=ROWS||c>=COLS||
-    visited[key]||
-    !board[r][c]||
-    board[r][c].type!=="color"||
-    board[r][c].value!==color
-  ) return [];
-
-  visited[key]=true;
-  let res=[{r,c}];
-  [[1,0],[-1,0],[0,1],[0,-1]].forEach(d=>{
-    res=res.concat(findGroup(r+d[0],c+d[1],color,visited));
+  board.forEach((c,i)=>{
+    const d=document.createElement("div");
+    d.className="cell "+(c?c.color:"empty")+" "+(c?.type||"");
+    d.textContent=c?.type==="rocket"?"🚀":c?.type==="bomb"?"💣":"";
+    d.onclick=()=>tap(i);
+    g.appendChild(d);
   });
+}
+
+function neighbors(i){
+  const x=i%size,y=Math.floor(i/size),n=[];
+  [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{
+    const nx=x+dx,ny=y+dy;
+    if(nx>=0&&nx<size&&ny>=0&&ny<size)n.push(ny*size+nx);
+  });
+  return n;
+}
+
+function findGroup(i){
+  const color=board[i]?.color;
+  if(!color)return[];
+  const stack=[i],res=[i],seen=new Set(res);
+  while(stack.length){
+    const cur=stack.pop();
+    neighbors(cur).forEach(n=>{
+      if(!seen.has(n)&&board[n]?.color===color&&board[n].type==="normal"){
+        seen.add(n);res.push(n);stack.push(n);
+      }
+    });
+  }
   return res;
 }
 
-function explode(r,c){
-  for(let dr=-1;dr<=1;dr++){
-    for(let dc=-1;dc<=1;dc++){
-      const nr=r+dr,nc=c+dc;
-      if(nr>=0&&nc>=0&&nr<ROWS&&nc<COLS){
-        board[nr][nc]=null;
-      }
-    }
+function tap(i){
+  if(!board[i])return;
+
+  if(board[i].type==="rocket"){
+    const b=neighbors(i).find(n=>board[n]?.type==="bomb");
+    if(b!==undefined){rocketBomb(i,b);return;}
+    fireRocket(i);return;
   }
-  fall();
-  refill();
+  if(board[i].type==="bomb"){explodeBomb(i);return;}
+
+  const group=findGroup(i);
+  if(group.length<2)return;
+
+  if(group.length>=6){
+    board[i]={color:board[i].color,type:"bomb"};
+    group.slice(1).forEach(j=>board[j]=null);
+  }else if(group.length>=4){
+    board[i]={color:board[i].color,type:"rocket"};
+    group.slice(1).forEach(j=>board[j]=null);
+  }else{
+    group.forEach(j=>board[j]=null);
+  }
   draw();
+  checkClear();
 }
 
-function fall(){
-  for(let c=0;c<COLS;c++){
-    let stack=[];
-    for(let r=ROWS-1;r>=0;r--){
-      if(board[r][c]) stack.push(board[r][c]);
-    }
-    for(let r=ROWS-1;r>=0;r--){
-      board[r][c]=stack.shift()||null;
-    }
+function fireRocket(i){
+  const x=i%size,y=Math.floor(i/size);
+  if(Math.random()<0.5){
+    for(let xx=0;xx<size;xx++)board[y*size+xx]=null;
+  }else{
+    for(let yy=0;yy<size;yy++)board[yy*size+x]=null;
+  }
+  draw();checkClear();
+}
+
+function explodeBomb(i){
+  const x=i%size,y=Math.floor(i/size);
+  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+    const nx=x+dx,ny=y+dy;
+    if(nx>=0&&nx<size&&ny>=0&&ny<size)board[ny*size+nx]=null;
+  }
+  draw();checkClear();
+}
+
+function rocketBomb(r,b){
+  const rx=r%size,ry=Math.floor(r/size);
+  for(let i=0;i<size;i++){
+    board[ry*size+i]=null;
+    board[i*size+rx]=null;
+  }
+  explodeBomb(b);
+}
+
+function checkClear(){
+  if(board.every(c=>!c)){
+    alert("🎉 CLEAR!");
   }
 }
 
-function refill(){
-  for(let r=0;r<ROWS;r++){
-    for(let c=0;c<COLS;c++){
-      if(!board[r][c]){
-        board[r][c]={type:"color",value:randColor()};
-      }
-    }
-  }
+function nextLevel(){
+  level++;
+  createLevel();
 }
 
-init();
+createLevel();
 </script>
 
 </body>
