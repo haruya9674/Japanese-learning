@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>たしざんクイズ 20もん</title>
+  <title>Addition Quiz</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -12,17 +12,21 @@
       text-align: center;
       padding: 20px;
     }
+
     h1 {
       margin-bottom: 10px;
     }
+
     .question {
       font-size: 28px;
       margin: 20px 0;
     }
+
     .count {
       font-size: 16px;
       color: #555;
     }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -30,6 +34,7 @@
       max-width: 300px;
       margin: auto;
     }
+
     button {
       font-size: 24px;
       padding: 18px;
@@ -38,33 +43,40 @@
       background: white;
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
+
     #result {
       font-size: 22px;
       margin-top: 20px;
       min-height: 1.5em;
     }
-    .back {
-      margin-top: 30px;
-      display: inline-block;
-      text-decoration: none;
-      color: #333;
+
+    .back-btn{
+      display:block;
+      margin:10px auto 14px;
+      padding:10px 16px;
+      font-size:14px;
+      border:none;
+      border-radius:14px;
+      background:white;
+      box-shadow:0 3px 8px rgba(0,0,0,0.18);
     }
   </style>
 </head>
 
 <body>
 
-<h1>たしざんクイズ</h1>
-<div class="count" id="count"></div>
+<button class="back-btn" onclick="location.href='index.html'">
+  🏠 Main Menu
+</button>
 
+<h1>たしざんクイズ<br><small>Addition Quiz</small></h1>
+
+<div class="count" id="count"></div>
 <div id="question" class="question"></div>
 <div class="grid" id="choices"></div>
 <div id="result"></div>
 
-<a class="back" href="index.html">← メニューにもどる</a>
-
 <script>
-  // ★ 問題を変えた20問（かぶらない構成）
   const quizzes = [
     {a:2,b:1},{a:4,b:2},{a:6,b:3},{a:8,b:1},{a:9,b:2},
     {a:5,b:4},{a:7,b:2},{a:3,b:6},{a:8,b:4},{a:9,b:3},
@@ -87,7 +99,7 @@
     const answer = q.a + q.b;
 
     document.getElementById("count").textContent =
-      `もんだい ${current + 1} / ${quizzes.length}`;
+      `Question ${current + 1} / ${quizzes.length}`;
 
     document.getElementById("question").textContent =
       `${q.a} + ${q.b} = ?`;
@@ -109,7 +121,7 @@
     const result = document.getElementById("result");
 
     if (num === answer) {
-      result.textContent = "⭕ せいかい！";
+      result.textContent = "⭕ Correct!";
       speak("Correct");
 
       current++;
@@ -117,15 +129,15 @@
         setTimeout(showQuiz, 800);
       } else {
         setTimeout(() => {
-          document.getElementById("question").textContent = "🎉 20もん クリア！";
+          document.getElementById("question").textContent = "🎉 Clear!";
           document.getElementById("choices").innerHTML = "";
           document.getElementById("count").textContent = "";
-          result.textContent = "Anna！すごい！よくがんばったね！";
+          result.textContent = "Anna! Great job!";
           speak("Great job Anna");
         }, 800);
       }
     } else {
-      result.textContent = "❌ ちがうよ";
+      result.textContent = "❌ Try again";
       speak("Try again");
     }
   }
