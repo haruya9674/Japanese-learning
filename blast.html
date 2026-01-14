@@ -10,7 +10,7 @@ body{
   font-family:system-ui,sans-serif;
   background:linear-gradient(180deg,#fff1f8,#e8f8ff);
   text-align:center;
-  padding:14px;
+  padding:12px;
 }
 
 a{ text-decoration:none; color:#333; }
@@ -18,35 +18,30 @@ a{ text-decoration:none; color:#333; }
 .top{
   display:flex;
   justify-content:space-between;
-  max-width:320px;
-  margin:8px auto;
+  max-width:340px;
+  margin:0 auto 8px;
 }
 
 .panel{
   background:white;
   padding:6px 10px;
-  border-radius:12px;
+  border-radius:14px;
   box-shadow:0 2px 6px rgba(0,0,0,.2);
   font-size:14px;
 }
 
-.grid{
+#grid{
   display:grid;
   gap:6px;
-  margin:10px auto;
+  margin:12px auto;
 }
 
 .cell{
-  width:42px;
-  height:42px;
+  width:40px;
+  height:40px;
   border-radius:10px;
   cursor:pointer;
-  transition:transform .25s,opacity .25s;
-}
-
-.cell.fade{
-  opacity:0;
-  transform:scale(0.6);
+  transition:opacity .5s, transform .4s;
 }
 
 .red{background:#ff7675;}
@@ -57,22 +52,44 @@ a{ text-decoration:none; color:#333; }
 
 .rocket{
   background:#fd79a8;
-  color:white;
-  font-size:20px;
+  position:relative;
 }
-.rocket::after{content:"🚀";}
+.rocket::after{
+  content:"🚀";
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 
 .bomb{
-  background:#2d3436;
-  color:white;
-  font-size:20px;
+  background:#636e72;
+  position:relative;
 }
-.bomb::after{content:"💣";}
+.bomb::after{
+  content:"🧨";
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 
-#msg{
-  margin-top:10px;
-  font-size:18px;
+.fade{
+  opacity:0;
+  transform:scale(0.5);
 }
+
+button{
+  border:none;
+  border-radius:14px;
+  padding:8px 14px;
+  background:#ffb3d9;
+  font-size:14px;
+}
+
+#msg{ margin-top:8px; font-weight:bold; }
 </style>
 </head>
 
@@ -86,8 +103,13 @@ a{ text-decoration:none; color:#333; }
   <div class="panel" id="goal"></div>
 </div>
 
-<div id="grid" class="grid"></div>
+<div id="grid"></div>
 <div id="msg"></div>
+
+<h3>🏆 ランキング</h3>
+<input id="nameInput" placeholder="なまえ（ひらがな）">
+<button onclick="saveScore()">スコア送信</button>
+<div id="rank"></div>
 
 <script>
 const STAGES=[
@@ -96,7 +118,8 @@ const STAGES=[
  {rows:8,cols:8,colors:5,moves:22,goal:{yellow:20}}
 ];
 
-let stage=0, board=[], ROWS, COLS, COLORS, movesLeft, goal;
+let stage=parseInt(localStorage.getItem("blastStage")||0);
+let board=[],ROWS,COLS,COLORS,movesLeft,goal;
 
 function randColor(){
   return COLORS[Math.floor(Math.random()*COLORS.length)];
@@ -117,7 +140,6 @@ function initStage(){
     }
   }
   document.getElementById("stage").textContent=`Stage ${stage+1}`;
-  document.getElementById("msg").textContent="";
   updateUI();
   draw();
 }
@@ -125,9 +147,7 @@ function initStage(){
 function updateUI(){
   document.getElementById("moves").textContent=`Moves: ${movesLeft}`;
   document.getElementById("goal").textContent=
-    "Goal: " + Object.entries(goal)
-      .map(([k,v])=>`${k} ${Math.max(0,v)}`)
-      .join(" / ");
+    "Goal: "+Object.entries(goal).map(([k,v])=>`${k}:${v}`).join(" ");
 }
 
 function draw(){
@@ -150,7 +170,7 @@ function tap(r,c){
   if(!cell) return;
 
   if(cell.type!=="color"){
-    activate(r,c,cell.type);
+    activateSpecial(r,c,cell.type);
     useMove();
     return;
   }
@@ -160,8 +180,8 @@ function tap(r,c){
   if(group.length<2) return;
 
   let special=null;
-  if(group.length>=5) special="bomb";
-  else if(group.length>=3) special="rocket";
+  if(group.length>=6) special="bomb";
+  else if(group.length>=4) special="rocket";
 
   group.forEach(([x,y])=>{
     if(goal[board[x][y].value]>0) goal[board[x][y].value]--;
@@ -191,7 +211,7 @@ function flood(r,c,color,group,seen){
   flood(r,c-1,color,group,seen);
 }
 
-function activate(r,c,type){
+function activateSpecial(r,c,type){
   board[r][c]=null;
 
   if(type==="rocket"){
@@ -203,11 +223,10 @@ function activate(r,c,type){
     for(let dr=-2;dr<=2;dr++)
       for(let dc=-2;dc<=2;dc++){
         const nr=r+dr,nc=c+dc;
-        if(nr>=0&&nc>=0&&nr<ROWS&&nc<COLS){
-          board[nr][nc]=null;
-        }
+        if(nr>=0&&nc>=0&&nr<ROWS&&nc<COLS) board[nr][nc]=null;
       }
   }
+
   collapse();
   refill();
 }
@@ -221,13 +240,9 @@ function collapse(){
 }
 
 function refill(){
-  for(let r=0;r<ROWS;r++){
-    for(let c=0;c<COLS;c++){
-      if(!board[r][c]){
-        board[r][c]={type:"color",value:randColor()};
-      }
-    }
-  }
+  for(let r=0;r<ROWS;r++)
+    for(let c=0;c<COLS;c++)
+      if(!board[r][c]) board[r][c]={type:"color",value:randColor()};
   draw();
 }
 
@@ -240,6 +255,7 @@ function useMove(){
 function checkClear(){
   if(Object.values(goal).every(v=>v<=0)){
     stage++;
+    localStorage.setItem("blastStage",stage);
     if(stage<STAGES.length){
       setTimeout(initStage,800);
     }else{
@@ -250,6 +266,25 @@ function checkClear(){
   }
 }
 
+/* ランキング */
+function saveScore(){
+  const name=document.getElementById("nameInput").value;
+  if(!/^[ぁ-んー]{1,6}$/.test(name)) return alert("ひらがなで1〜6文字");
+
+  const list=JSON.parse(localStorage.getItem("blastRank")||"[]");
+  list.push({name,stage:stage+1});
+  list.sort((a,b)=>b.stage-a.stage);
+  localStorage.setItem("blastRank",JSON.stringify(list.slice(0,5)));
+  drawRank();
+}
+
+function drawRank(){
+  const list=JSON.parse(localStorage.getItem("blastRank")||"[]");
+  document.getElementById("rank").innerHTML=
+    list.map((r,i)=>`${i+1}. ${r.name} - Stage ${r.stage}`).join("<br>");
+}
+
+drawRank();
 initStage();
 </script>
 
