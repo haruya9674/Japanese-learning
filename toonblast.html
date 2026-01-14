@@ -2,176 +2,180 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>Blast Game</title>
+<title>Blast Puzzle</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{
-  font-family:system-ui;
-  background:#f4f8ff;
+  font-family:system-ui,sans-serif;
+  background:linear-gradient(180deg,#fff1f8,#e8f8ff);
   text-align:center;
-  padding:15px;
+  padding:16px;
 }
-h1{margin:5px}
-#level{font-size:14px;color:#555}
+.top{
+  display:flex;
+  justify-content:space-between;
+  max-width:320px;
+  margin:0 auto 10px;
+}
+.panel{
+  background:white;
+  padding:6px 10px;
+  border-radius:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,.2);
+  font-size:14px;
+}
 .grid{
   display:grid;
-  grid-template-columns:repeat(8,1fr);
   gap:6px;
-  max-width:360px;
-  margin:20px auto;
+  margin:0 auto;
 }
 .cell{
+  width:40px;
   height:40px;
   border-radius:10px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:22px;
-  color:#fff;
-  font-weight:bold;
+  cursor:pointer;
 }
-.red{background:#ff6b6b}
-.blue{background:#4dabf7}
-.green{background:#51cf66}
-.yellow{background:#fcc419;color:#333}
-.rocket{background:#845ef7}
-.bomb{background:#212529}
-.empty{background:#dee2e6}
-button{
-  padding:10px 18px;
-  border:none;
-  border-radius:14px;
-  background:white;
-  box-shadow:0 3px 8px rgba(0,0,0,.2);
-}
+.red{background:#ff7675;}
+.blue{background:#74b9ff;}
+.yellow{background:#ffeaa7;}
+.green{background:#55efc4;}
+.purple{background:#a29bfe;}
+.rocket{background:#fd79a8;}
+.bomb{background:#2d3436;}
 </style>
 </head>
 
 <body>
 
-<h1>💥 Blast Game</h1>
-<div id="level"></div>
-<div class="grid" id="grid"></div>
-<button onclick="nextLevel()">▶ Next Level</button>
+<a href="index.html">← メインメニュー</a>
+<h2 id="stage"></h2>
+
+<div class="top">
+  <div class="panel" id="moves"></div>
+  <div class="panel" id="goal"></div>
+</div>
+
+<div id="grid" class="grid"></div>
+<div id="msg"></div>
 
 <script>
-const size=8;
-const colors=["red","blue","green","yellow"];
-let board=[];
-let level=1;
+const STAGES=[
+ {rows:6,cols:6,colors:4,moves:15,goal:{red:10}},
+ {rows:7,cols:7,colors:4,moves:18,goal:{blue:15}},
+ {rows:8,cols:8,colors:5,moves:22,goal:{yellow:20}}
+];
 
-function createLevel(){
+let stage=0,board=[],ROWS,COLS,COLORS,movesLeft,goal;
+
+function randColor(){
+  return COLORS[Math.floor(Math.random()*COLORS.length)];
+}
+
+function initStage(){
+  const s=STAGES[stage];
+  ROWS=s.rows; COLS=s.cols;
+  COLORS=["red","blue","yellow","green","purple"].slice(0,s.colors);
+  movesLeft=s.moves;
+  goal=JSON.parse(JSON.stringify(s.goal));
+
   board=[];
-  for(let i=0;i<size*size;i++){
-    board.push({color:colors[Math.floor(Math.random()*colors.length)],type:"normal"});
+  for(let r=0;r<ROWS;r++){
+    board[r]=[];
+    for(let c=0;c<COLS;c++){
+      board[r][c]={type:"color",value:randColor()};
+    }
   }
-  draw();
+  document.getElementById("stage").textContent=`Stage ${stage+1}`;
+  updateUI(); draw();
+}
+
+function updateUI(){
+  document.getElementById("moves").textContent=`Moves: ${movesLeft}`;
+  document.getElementById("goal").textContent=
+    "Goal: "+Object.entries(goal).map(([k,v])=>`${k}:${v}`).join(" ");
 }
 
 function draw(){
-  document.getElementById("level").textContent="Level "+level;
   const g=document.getElementById("grid");
+  g.style.gridTemplateColumns=`repeat(${COLS},1fr)`;
   g.innerHTML="";
-  board.forEach((c,i)=>{
-    const d=document.createElement("div");
-    d.className="cell "+(c?c.color:"empty")+" "+(c?.type||"");
-    d.textContent=c?.type==="rocket"?"🚀":c?.type==="bomb"?"💣":"";
-    d.onclick=()=>tap(i);
-    g.appendChild(d);
-  });
-}
-
-function neighbors(i){
-  const x=i%size,y=Math.floor(i/size),n=[];
-  [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{
-    const nx=x+dx,ny=y+dy;
-    if(nx>=0&&nx<size&&ny>=0&&ny<size)n.push(ny*size+nx);
-  });
-  return n;
-}
-
-function findGroup(i){
-  const color=board[i]?.color;
-  if(!color)return[];
-  const stack=[i],res=[i],seen=new Set(res);
-  while(stack.length){
-    const cur=stack.pop();
-    neighbors(cur).forEach(n=>{
-      if(!seen.has(n)&&board[n]?.color===color&&board[n].type==="normal"){
-        seen.add(n);res.push(n);stack.push(n);
-      }
+  board.forEach((row,r)=>{
+    row.forEach((cell,c)=>{
+      const d=document.createElement("div");
+      d.className="cell "+(cell.type==="color"?cell.value:cell.type);
+      d.onclick=()=>tap(r,c);
+      g.appendChild(d);
     });
-  }
-  return res;
+  });
 }
 
-function tap(i){
-  if(!board[i])return;
+function tap(r,c){
+  if(movesLeft<=0) return;
+  const cell=board[r][c];
 
-  if(board[i].type==="rocket"){
-    const b=neighbors(i).find(n=>board[n]?.type==="bomb");
-    if(b!==undefined){rocketBomb(i,b);return;}
-    fireRocket(i);return;
+  if(cell.type!=="color"){
+    activate(r,c,cell.type);
+    useMove();
+    return;
   }
-  if(board[i].type==="bomb"){explodeBomb(i);return;}
 
-  const group=findGroup(i);
-  if(group.length<2)return;
+  const group=[];
+  flood(r,c,cell.value,group,{});
+  if(group.length<2) return;
 
-  if(group.length>=6){
-    board[i]={color:board[i].color,type:"bomb"};
-    group.slice(1).forEach(j=>board[j]=null);
-  }else if(group.length>=4){
-    board[i]={color:board[i].color,type:"rocket"};
-    group.slice(1).forEach(j=>board[j]=null);
-  }else{
-    group.forEach(j=>board[j]=null);
+  let special=null;
+  if(group.length>=6) special="bomb";
+  else if(group.length>=4) special="rocket";
+
+  group.forEach(([x,y])=>{
+    if(goal[board[x][y].value]>0) goal[board[x][y].value]--;
+    board[x][y]=null;
+  });
+
+  if(special){
+    const [x,y]=group[0];
+    board[x][y]={type:special};
   }
-  draw();
-  checkClear();
+
+  collapse(); refill();
+  useMove();
 }
 
-function fireRocket(i){
-  const x=i%size,y=Math.floor(i/size);
-  if(Math.random()<0.5){
-    for(let xx=0;xx<size;xx++)board[y*size+xx]=null;
-  }else{
-    for(let yy=0;yy<size;yy++)board[yy*size+x]=null;
+function flood(r,c,color,group,seen){
+  const k=r+","+c;
+  if(seen[k]||r<0||c<0||r>=ROWS||c>=COLS) return;
+  const cell=board[r][c];
+  if(!cell||cell.type!=="color"||cell.value!==color) return;
+  seen[k]=1; group.push([r,c]);
+  flood(r+1,c,color,group,seen);
+  flood(r-1,c,color,group,seen);
+  flood(r,c+1,color,group,seen);
+  flood(r,c-1,color,group,seen);
+}
+
+function activate(r,c,type){
+  board[r][c]=null;
+  if(type==="rocket"){
+    for(let i=0;i<COLS;i++) board[r][i]=null;
+    for(let i=0;i<ROWS;i++) board[i][c]=null;
   }
-  draw();checkClear();
-}
-
-function explodeBomb(i){
-  const x=i%size,y=Math.floor(i/size);
-  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
-    const nx=x+dx,ny=y+dy;
-    if(nx>=0&&nx<size&&ny>=0&&ny<size)board[ny*size+nx]=null;
+  if(type==="bomb"){
+    for(let dr=-2;dr<=2;dr++)
+      for(let dc=-2;dc<=2;dc++){
+        const nr=r+dr,nc=c+dc;
+        if(nr>=0&&nc>=0&&nr<ROWS&&nc<COLS) board[nr][nc]=null;
+      }
   }
-  draw();checkClear();
+  collapse(); refill();
 }
 
-function rocketBomb(r,b){
-  const rx=r%size,ry=Math.floor(r/size);
-  for(let i=0;i<size;i++){
-    board[ry*size+i]=null;
-    board[i*size+rx]=null;
-  }
-  explodeBomb(b);
-}
-
-function checkClear(){
-  if(board.every(c=>!c)){
-    alert("🎉 CLEAR!");
+function collapse(){
+  for(let c=0;c<COLS;c++){
+    let stack=[];
+    for(let r=ROWS-1;r>=0;r--) if(board[r][c]) stack.push(board[r][c]);
+    for(let r=ROWS-1;r>=0;r--) board[r][c]=stack.shift()||null;
   }
 }
 
-function nextLevel(){
-  level++;
-  createLevel();
-}
-
-createLevel();
-</script>
-
-</body>
-</html>
+function refill(){
+  for(let r=0
