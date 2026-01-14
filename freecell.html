@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>FreeCell</title>
@@ -8,235 +8,155 @@
 <style>
 body{
   font-family: system-ui, sans-serif;
-  background:#f5f7fb;
+  background: linear-gradient(180deg,#eef6ff,#ffffff);
   text-align:center;
-  padding:14px;
+  padding:10px;
 }
 
 button{
-  width:100%;
-  max-width:320px;
-  padding:18px;
-  margin:14px auto;
-  font-size:18px;
-  border-radius:18px;
   border:none;
-  background:white;
-  box-shadow:0 4px 10px rgba(0,0,0,0.15);
-}
-
-.small-btn{
-  padding:10px;
-  font-size:14px;
-  margin-top:10px;
-}
-
-.board{
-  display:flex;
-  justify-content:center;
-  gap:14px;
-  margin-bottom:14px;
-}
-
-.cell{
-  width:80px;
-  height:110px;
-  background:white;
   border-radius:14px;
-  box-shadow: inset 0 0 0 2px #bbb;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  padding:10px 16px;
+  background:white;
+  box-shadow:0 3px 8px rgba(0,0,0,.2);
+  font-size:15px;
+}
+
+.back-btn{
+  display:block;
+  margin:8px auto 12px;
+}
+
+h1{ margin:10px 0; }
+
+#levelMenu button{
+  margin:8px;
+  width:200px;
+  font-size:18px;
 }
 
 .tableau{
   display:flex;
   gap:14px;
   justify-content:center;
+  margin-top:10px;
   overflow-x:auto;
 }
 
-.stack{ width:80px; }
+.stack{ width:72px; }
 
 .card{
   background:white;
-  border-radius:14px;
-  padding:12px 0;
-  margin-top:-30px;
-  font-size:24px;
-  font-weight:700;
-  box-shadow:0 3px 6px rgba(0,0,0,0.25);
+  border-radius:12px;
+  margin-top:-26px;
+  padding:10px 0;
+  font-size:22px;
+  font-weight:600;
+  box-shadow:0 3px 6px rgba(0,0,0,.25);
 }
 
-.red{ color:crimson; }
-.black{ color:black; }
+.card:first-child{ margin-top:0; }
 
 .selected{
   outline:4px solid #4da3ff;
 }
+
+.hidden{ display:none; }
 </style>
 </head>
 
 <body>
 
-<!-- メニュー -->
-<div id="menu">
-  <h1>🃏 FreeCell</h1>
+<button class="back-btn" onclick="location.href='index.html'">🏠 Main Menu</button>
 
-  <button onclick="startGame(1)">🟢 Easy</button>
-  <button onclick="startGame(2)">🟡 Normal</button>
-  <button onclick="startGame(3)">🔴 Hard</button>
+<h1>🃏 FreeCell</h1>
 
-  <button class="small-btn" onclick="location.href='index.html'">
-    ← メインメニュー
-  </button>
+<div id="levelMenu">
+  <button onclick="startGame(4)">Easy</button><br>
+  <button onclick="startGame(6)">Normal</button><br>
+  <button onclick="startGame(8)">Hard</button>
 </div>
 
-<!-- ゲーム -->
-<div id="game" hidden>
-  <button class="small-btn" onclick="backMenu()">← レベル選択</button>
-
-  <div class="board" id="freecells"></div>
-  <div class="board" id="goals"></div>
+<div id="game" class="hidden">
+  <button onclick="showLevels()">← Level Select</button>
   <div class="tableau" id="tableau"></div>
 </div>
 
 <script>
-let level;
-let freeCount;
-let freecells, goals, tableau;
-let selected = null;
+let stacks=[], selected=null;
 
-const suits=["♠","♥","♦","♣"];
-const colors={♠:"black",♣:"black",♥:"red",♦:"red"};
-
-const menu=document.getElementById("menu");
-const game=document.getElementById("game");
-const freeDiv=document.getElementById("freecells");
-const goalDiv=document.getElementById("goals");
-const tabDiv=document.getElementById("tableau");
-
-function startGame(lv){
-  level=lv;
-  freeCount=lv===3?2:4;
-
-  menu.hidden=true;
-  game.hidden=false;
-
-  init();
+function showLevels(){
+  document.getElementById("game").classList.add("hidden");
+  document.getElementById("levelMenu").classList.remove("hidden");
 }
 
-function backMenu(){
-  game.hidden=true;
-  menu.hidden=false;
-}
+function startGame(cols){
+  stacks=[];
+  selected=null;
+  document.getElementById("levelMenu").classList.add("hidden");
+  document.getElementById("game").classList.remove("hidden");
 
-function init(){
   let deck=[];
-  suits.forEach(s=>{
-    for(let n=1;n<=13;n++) deck.push({n,s,c:colors[s]});
+  ["♠","♥","♦","♣"].forEach(s=>{
+    for(let i=1;i<=13;i++) deck.push(i+s);
   });
   deck.sort(()=>Math.random()-0.5);
 
-  freecells=Array(freeCount).fill(null);
-  goals=[[],[],[],[]];
-  tableau=Array.from({length:8},()=>[]);
+  for(let i=0;i<cols;i++) stacks.push([]);
 
-  deck.forEach((c,i)=>tableau[i%8].push(c));
-  selected=null;
+  deck.forEach((c,i)=>stacks[i%cols].push(c));
   render();
 }
 
 function render(){
-  freeDiv.innerHTML="";
-  goalDiv.innerHTML="";
-  tabDiv.innerHTML="";
+  const t=document.getElementById("tableau");
+  t.innerHTML="";
+  stacks.forEach((stack,i)=>{
+    const d=document.createElement("div");
+    d.className="stack";
+    d.onclick=()=>tapStack(i);
 
-  freecells.forEach((c,i)=>{
-    const d=cell(c);
-    d.onclick=()=>tap({t:"free",i});
-    freeDiv.appendChild(d);
-  });
-
-  goals.forEach((g,i)=>{
-    const d=cell(g.at(-1));
-    d.onclick=()=>tap({t:"goal",i});
-    goalDiv.appendChild(d);
-  });
-
-  tableau.forEach((a,i)=>{
-    const s=document.createElement("div");
-    s.className="stack";
-    a.forEach((c,idx)=>{
-      const el=card(c);
-      if(idx===a.length-1){
-        if(selected?.r?.t==="tab"&&selected.r.i===i)
-          el.classList.add("selected");
-        el.onclick=()=>tap({t:"tab",i});
-      }
-      s.appendChild(el);
+    stack.forEach((card,j)=>{
+      const c=document.createElement("div");
+      c.className="card";
+      if(selected && selected.i===i && selected.j===j) c.classList.add("selected");
+      c.textContent=card;
+      d.appendChild(c);
     });
-    tabDiv.appendChild(s);
+
+    t.appendChild(d);
   });
 }
 
-function cell(c){
-  const d=document.createElement("div");
-  d.className="cell";
-  if(c) d.appendChild(card(c));
-  return d;
-}
+function tapStack(i){
+  const stack=stacks[i];
+  if(stack.length===0){
+    if(selected){
+      stack.push(selected.card);
+      stacks[selected.i].splice(selected.j,1);
+      selected=null;
+      render();
+    }
+    return;
+  }
 
-function card(c){
-  const d=document.createElement("div");
-  d.className=`card ${c.c}`;
-  d.textContent=(c.n===1?"A":c.n===11?"J":c.n===12?"Q":c.n===13?"K":c.n)+c.s;
-  return d;
-}
+  const j=stack.length-1;
+  const card=stack[j];
 
-function top(r){
-  if(r.t==="free") return freecells[r.i];
-  if(r.t==="goal") return goals[r.i].at(-1);
-  if(r.t==="tab") return tableau[r.i].at(-1);
-}
-
-function tap(r){
   if(!selected){
-    const c=top(r);
-    if(c) selected={c,r};
+    selected={i,j,card};
+    render();
   }else{
-    move(r);
+    if(selected.i===i){
+      selected=null;
+      render();
+      return;
+    }
+    stack.push(selected.card);
+    stacks[selected.i].splice(selected.j,1);
     selected=null;
+    render();
   }
-  render();
-}
-
-function move(to){
-  const {c,r}=selected;
-
-  if(to.t==="free" && !freecells[to.i]){
-    freecells[to.i]=c; remove(r); return;
-  }
-
-  if(to.t==="tab"){
-    const t=top(to);
-    if(!t||(c.n===t.n-1&&(level===1||c.c!==t.c))){
-      tableau[to.i].push(c); remove(r);
-    }
-  }
-
-  if(to.t==="goal"){
-    const t=top(to);
-    if((!t&&c.n===1)||(t&&c.n===t.n+1&&(level<3||c.s===t.s))){
-      goals[to.i].push(c); remove(r);
-    }
-  }
-}
-
-function remove(r){
-  if(r.t==="free") freecells[r.i]=null;
-  if(r.t==="goal") goals[r.i].pop();
-  if(r.t==="tab") tableau[r.i].pop();
 }
 </script>
 
