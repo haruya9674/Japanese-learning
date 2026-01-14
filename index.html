@@ -1,112 +1,88 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>Play Menu</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Play Menu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      background: linear-gradient(180deg, #fff1f8, #e8f4ff);
-      text-align: center;
-      padding: 30px 20px;
-    }
+<style>
+body {
+  font-family: system-ui, sans-serif;
+  background: linear-gradient(180deg,#fff6e5,#e8f4ff);
+  text-align: center;
+  padding: 20px;
+}
 
-    h1 {
-      font-size: 28px;
-      margin-bottom: 10px;
-    }
+h1 {
+  margin-bottom: 10px;
+}
 
-    .subtitle {
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 30px;
-    }
+.subtitle {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 25px;
+}
 
-    .menu {
-      display: flex;
-      flex-direction: column;
-      gap: 22px;
-      max-width: 340px;
-      margin: auto;
-    }
+.menu {
+  max-width: 360px;
+  margin: auto;
+}
 
-    a {
-      position: relative;
-      display: block;
-      padding: 22px 18px;
-      text-decoration: none;
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 6px 14px rgba(0,0,0,0.12);
-      transition: transform 0.1s ease;
-    }
+.card {
+  display: block;
+  text-decoration: none;
+  color: #333;
+  background: white;
+  border-radius: 20px;
+  padding: 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
 
-    a:active {
-      transform: scale(0.97);
-    }
+.card-title {
+  font-size: 20px;
+  margin-bottom: 6px;
+}
 
-    .icon {
-      font-size: 34px;
-      margin-bottom: 6px;
-    }
+.card-sub {
+  font-size: 14px;
+  color: #777;
+}
 
-    .jp {
-      font-size: 20px;
-      font-weight: 600;
-      color: #333;
-    }
+.lv1 { background: linear-gradient(135deg,#e8fff1,#ffffff); }
+.lv2 { background: linear-gradient(135deg,#fffbe8,#ffffff); }
+.lv3 { background: linear-gradient(135deg,#ffe8e8,#ffffff); }
+.free { background: linear-gradient(135deg,#e8f0ff,#ffffff); }
 
-    .en {
-      font-size: 14px;
-      color: #777;
-    }
-
-    .lv1 { background: linear-gradient(135deg, #ffe6a7, #fff); }
-    .lv2 { background: linear-gradient(135deg, #d7f9f1, #fff); }
-    .lv3 { background: linear-gradient(135deg, #e3ddff, #fff); }
-
-    .star {
-      position: absolute;
-      top: -12px;
-      right: -12px;
-      font-size: 28px;
-    }
-  </style>
+</style>
 </head>
 
 <body>
 
-<h1>🎈 あそぶメニュー</h1>
-<div class="subtitle">Play Menu</div>
+<h1>🎮 Play Menu</h1>
+<div class="subtitle">Choose a game and have fun!</div>
 
 <div class="menu">
 
-  <a href="math.html" class="lv1">
-    <div class="icon">➕</div>
-    <div class="jp">たしざんクイズ</div>
-    <div class="en">Addition Quiz</div>
+  <a href="math.html" class="card lv1">
+    <div class="card-title">➕ Addition Quiz</div>
+    <div class="card-sub">たしざんクイズ（Easy）</div>
   </a>
 
-  <a href="math_lv2.html" class="lv2">
-    <div class="icon">✨</div>
-    <div class="jp">たしざんクイズ LV2</div>
-    <div class="en">Addition Quiz Level 2</div>
+  <a href="math_lv2.html" class="card lv2">
+    <div class="card-title">➕➕ Addition Quiz LV2</div>
+    <div class="card-sub">たしざんクイズ（Normal）</div>
   </a>
 
-  <a href="math_lv3.html" class="lv3">
-    <div class="star">⭐</div>
-    <div class="icon">🏆</div>
-    <div class="jp">たしざんクイズ LV3</div>
-    <div class="en">Addition Quiz Level 3</div>
+  <a href="math_lv3.html" class="card lv3">
+    <div class="card-title">➕➕➕ Addition Quiz LV3</div>
+    <div class="card-sub">たしざんクイズ（Hard）</div>
   </a>
 
-  <a href="memory.html" class="lv3">
-  <div class="icon">🧠</div>
-  <div class="jp">しんけいすいじゃく</div>
-  <div class="en">Memory Game</div>
-</a>
+  <a href="freecell.html" class="card free">
+    <div class="card-title">🃏 FreeCell</div>
+    <div class="card-sub">カードゲーム（Kids → Adult）</div>
+  </a>
 
 </div>
 
