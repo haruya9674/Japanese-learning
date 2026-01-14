@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>🏆 Ranking</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  font-family:system-ui,sans-serif;
+  background:linear-gradient(180deg,#fff1f8,#e8f8ff);
+  text-align:center;
+  padding:20px;
+}
+.card{
+  background:white;
+  border-radius:16px;
+  padding:12px;
+  margin:8px auto;
+  max-width:300px;
+  box-shadow:0 4px 8px rgba(0,0,0,.2);
+}
+.rank{
+  font-size:18px;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<a href="index.html">← メインメニュー</a>
+<h2>🏆 Ranking</h2>
+
+<div id="list"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "ここにAPIKEY",
+  authDomain: "xxxx.firebaseapp.com",
+  projectId: "xxxx",
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+db.collection("ranking")
+  .orderBy("stage","desc")
+  .limit(20)
+  .onSnapshot(snap=>{
+    const list=document.getElementById("list");
+    list.innerHTML="";
+    let rank=1;
+    snap.forEach(doc=>{
+      const d=doc.data();
+      const div=document.createElement("div");
+      div.className="card";
+      div.innerHTML=`
+        <div class="rank">#${rank}</div>
+        <div>${d.name}</div>
+        <div>Stage ${d.stage}</div>
+      `;
+      list.appendChild(div);
+      rank++;
+    });
+  });
+</script>
+
+</body>
+</html>
