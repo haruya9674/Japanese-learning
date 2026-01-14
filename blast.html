@@ -10,18 +10,16 @@ body{
   font-family:system-ui,sans-serif;
   background:linear-gradient(180deg,#fff1f8,#e8f8ff);
   text-align:center;
-  padding:12px;
+  padding:14px;
 }
 
 a{ text-decoration:none; color:#333; }
 
-h2{ margin:6px 0; }
-
 .top{
   display:flex;
   justify-content:space-between;
-  max-width:340px;
-  margin:0 auto 8px;
+  max-width:320px;
+  margin:8px auto;
 }
 
 .panel{
@@ -32,20 +30,23 @@ h2{ margin:6px 0; }
   font-size:14px;
 }
 
-/* ★★★ ここ重要 ★★★ */
 .grid{
   display:grid;
   gap:6px;
-  margin:12px auto;
-  width:fit-content;
+  margin:10px auto;
 }
 
 .cell{
-  width:44px;
-  height:44px;
-  border-radius:12px;
+  width:42px;
+  height:42px;
+  border-radius:10px;
   cursor:pointer;
-  transition:transform .15s, opacity .4s;
+  transition:transform .25s,opacity .25s;
+}
+
+.cell.fade{
+  opacity:0;
+  transform:scale(0.6);
 }
 
 .red{background:#ff7675;}
@@ -55,38 +56,22 @@ h2{ margin:6px 0; }
 .purple{background:#a29bfe;}
 
 .rocket{
-  background:linear-gradient(135deg,#fd79a8,#ffb6c1);
+  background:#fd79a8;
+  color:white;
+  font-size:20px;
 }
+.rocket::after{content:"🚀";}
+
 .bomb{
   background:#2d3436;
+  color:white;
+  font-size:20px;
 }
+.bomb::after{content:"💣";}
 
 #msg{
-  font-weight:bold;
-  margin-top:6px;
-}
-
-.rank-box{
-  background:white;
-  border-radius:16px;
-  padding:10px;
-  max-width:340px;
-  margin:16px auto;
-  box-shadow:0 2px 6px rgba(0,0,0,.2);
-}
-
-input{
-  width:80%;
-  padding:6px;
-  border-radius:8px;
-  border:1px solid #ccc;
-}
-button{
-  margin-top:6px;
-  padding:6px 12px;
-  border-radius:10px;
-  border:none;
-  background:#ff9ff3;
+  margin-top:10px;
+  font-size:18px;
 }
 </style>
 </head>
@@ -101,19 +86,8 @@ button{
   <div class="panel" id="goal"></div>
 </div>
 
-<!-- ★ ゲーム盤 -->
 <div id="grid" class="grid"></div>
-
 <div id="msg"></div>
-
-<!-- ★ ランキング -->
-<div class="rank-box">
-  <h3>🏆 ランキング</h3>
-  <input id="name" placeholder="なまえ（ひらがな）" maxlength="5">
-  <br>
-  <button onclick="submitScore()">スコア送信</button>
-  <div id="rank"></div>
-</div>
 
 <script>
 const STAGES=[
@@ -122,8 +96,7 @@ const STAGES=[
  {rows:8,cols:8,colors:5,moves:22,goal:{yellow:20}}
 ];
 
-let stage=Number(localStorage.getItem("blastStage")||0);
-let board=[],ROWS,COLS,COLORS,movesLeft,goal,score=0;
+let stage=0, board=[], ROWS, COLS, COLORS, movesLeft, goal;
 
 function randColor(){
   return COLORS[Math.floor(Math.random()*COLORS.length)];
@@ -150,14 +123,16 @@ function initStage(){
 }
 
 function updateUI(){
-  moves.textContent=`Moves: ${movesLeft}`;
-  goal.textContent=
-    "Goal: "+Object.entries(goal).map(([k,v])=>`${k}:${v}`).join(" ");
+  document.getElementById("moves").textContent=`Moves: ${movesLeft}`;
+  document.getElementById("goal").textContent=
+    "Goal: " + Object.entries(goal)
+      .map(([k,v])=>`${k} ${Math.max(0,v)}`)
+      .join(" / ");
 }
 
 function draw(){
   const g=document.getElementById("grid");
-  g.style.gridTemplateColumns=`repeat(${COLS}, 44px)`;
+  g.style.gridTemplateColumns=`repeat(${COLS},1fr)`;
   g.innerHTML="";
   board.forEach((row,r)=>{
     row.forEach((cell,c)=>{
@@ -174,18 +149,23 @@ function tap(r,c){
   const cell=board[r][c];
   if(!cell) return;
 
+  if(cell.type!=="color"){
+    activate(r,c,cell.type);
+    useMove();
+    return;
+  }
+
   const group=[];
   flood(r,c,cell.value,group,{});
   if(group.length<2) return;
 
   let special=null;
-  if(group.length>=6) special="bomb";
-  else if(group.length>=4) special="rocket";
+  if(group.length>=5) special="bomb";
+  else if(group.length>=3) special="rocket";
 
   group.forEach(([x,y])=>{
     if(goal[board[x][y].value]>0) goal[board[x][y].value]--;
     board[x][y]=null;
-    score+=10;
   });
 
   if(special){
@@ -195,21 +175,41 @@ function tap(r,c){
 
   collapse();
   refill();
-  movesLeft--;
-  updateUI();
+  useMove();
 }
 
 function flood(r,c,color,group,seen){
   const k=r+","+c;
   if(seen[k]||r<0||c<0||r>=ROWS||c>=COLS) return;
   const cell=board[r][c];
-  if(!cell||cell.value!==color) return;
+  if(!cell||cell.type!=="color"||cell.value!==color) return;
   seen[k]=1;
   group.push([r,c]);
   flood(r+1,c,color,group,seen);
   flood(r-1,c,color,group,seen);
   flood(r,c+1,color,group,seen);
   flood(r,c-1,color,group,seen);
+}
+
+function activate(r,c,type){
+  board[r][c]=null;
+
+  if(type==="rocket"){
+    for(let i=0;i<COLS;i++) board[r][i]=null;
+    for(let i=0;i<ROWS;i++) board[i][c]=null;
+  }
+
+  if(type==="bomb"){
+    for(let dr=-2;dr<=2;dr++)
+      for(let dc=-2;dc<=2;dc++){
+        const nr=r+dr,nc=c+dc;
+        if(nr>=0&&nc>=0&&nr<ROWS&&nc<COLS){
+          board[nr][nc]=null;
+        }
+      }
+  }
+  collapse();
+  refill();
 }
 
 function collapse(){
@@ -231,24 +231,25 @@ function refill(){
   draw();
 }
 
-/* ランキング */
-function submitScore(){
-  const name=document.getElementById("name").value.trim();
-  if(!name.match(/^[ぁ-んー]{1,5}$/)) return alert("ひらがな1〜5文字");
-
-  const list=JSON.parse(localStorage.getItem("blastRank")||"[]");
-  list.push({name,score});
-  list.sort((a,b)=>b.score-a.score);
-  localStorage.setItem("blastRank",JSON.stringify(list.slice(0,10)));
-  renderRank();
+function useMove(){
+  movesLeft--;
+  updateUI();
+  checkClear();
 }
 
-function renderRank(){
-  const list=JSON.parse(localStorage.getItem("blastRank")||"[]");
-  rank.innerHTML=list.map((r,i)=>`${i+1}. ${r.name} - ${r.score}`).join("<br>");
+function checkClear(){
+  if(Object.values(goal).every(v=>v<=0)){
+    stage++;
+    if(stage<STAGES.length){
+      setTimeout(initStage,800);
+    }else{
+      document.getElementById("msg").textContent="🏆 ALL CLEAR!";
+    }
+  }else if(movesLeft<=0){
+    document.getElementById("msg").textContent="💥 FAILED";
+  }
 }
 
-renderRank();
 initStage();
 </script>
 
