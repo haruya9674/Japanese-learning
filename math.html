@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>Addition Quiz</title>
+  <title>たしざんクイズ LV1</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -12,8 +12,10 @@
       text-align: center;
       padding: 20px;
     }
+    h1 { margin-bottom: 6px; }
 
-    h1 {
+    .timer {
+      font-size: 18px;
       margin-bottom: 10px;
     }
 
@@ -42,6 +44,7 @@
       border-radius: 12px;
       background: white;
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      cursor: pointer;
     }
 
     #result {
@@ -50,31 +53,26 @@
       min-height: 1.5em;
     }
 
-    .back-btn{
-      display:block;
-      margin:10px auto 14px;
-      padding:10px 16px;
-      font-size:14px;
-      border:none;
-      border-radius:14px;
-      background:white;
-      box-shadow:0 3px 8px rgba(0,0,0,0.18);
+    .back {
+      margin-top: 30px;
+      display: inline-block;
+      text-decoration: none;
+      color: #333;
     }
   </style>
 </head>
 
 <body>
 
-<button class="back-btn" onclick="location.href='index.html'">
-  🏠 Main Menu
-</button>
-
-<h1>たしざんクイズ<br><small>Addition Quiz</small></h1>
-
+<h1>たしざんクイズ LV1</h1>
+<div class="timer" id="timer"></div>
 <div class="count" id="count"></div>
+
 <div id="question" class="question"></div>
 <div class="grid" id="choices"></div>
 <div id="result"></div>
+
+<a class="back" href="index.html">← メニューにもどる</a>
 
 <script>
   const quizzes = [
@@ -85,6 +83,29 @@
   ];
 
   let current = 0;
+  let timeLeft = 60;
+  let timer = null;
+  let locked = false;
+
+  function startTimer() {
+    updateTimer();
+    timer = setInterval(() => {
+      timeLeft--;
+      updateTimer();
+
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        locked = true;
+        document.getElementById("result").textContent = "⏰ Time up!";
+        speak("Time up");
+      }
+    }, 1000);
+  }
+
+  function updateTimer() {
+    document.getElementById("timer").textContent =
+      `⏱ のこり時間：${timeLeft}秒`;
+  }
 
   function makeChoices(answer) {
     const set = new Set([answer]);
@@ -95,11 +116,13 @@
   }
 
   function showQuiz() {
+    if (locked) return;
+
     const q = quizzes[current];
     const answer = q.a + q.b;
 
     document.getElementById("count").textContent =
-      `Question ${current + 1} / ${quizzes.length}`;
+      `もんだい ${current + 1} / ${quizzes.length}`;
 
     document.getElementById("question").textContent =
       `${q.a} + ${q.b} = ?`;
@@ -118,26 +141,27 @@
   }
 
   function check(num, answer) {
+    if (locked) return;
+
     const result = document.getElementById("result");
 
     if (num === answer) {
-      result.textContent = "⭕ Correct!";
+      result.textContent = "⭕ せいかい！";
       speak("Correct");
 
       current++;
       if (current < quizzes.length) {
-        setTimeout(showQuiz, 800);
+        setTimeout(showQuiz, 700);
       } else {
-        setTimeout(() => {
-          document.getElementById("question").textContent = "🎉 Clear!";
-          document.getElementById("choices").innerHTML = "";
-          document.getElementById("count").textContent = "";
-          result.textContent = "Anna! Great job!";
-          speak("Great job Anna");
-        }, 800);
+        clearInterval(timer);
+        document.getElementById("question").textContent = "🎉 クリア！";
+        document.getElementById("choices").innerHTML = "";
+        document.getElementById("count").textContent = "";
+        result.textContent = "Anna！すごい！";
+        speak("Great job Anna");
       }
     } else {
-      result.textContent = "❌ Try again";
+      result.textContent = "❌ ちがうよ";
       speak("Try again");
     }
   }
@@ -145,9 +169,12 @@
   function speak(text) {
     const msg = new SpeechSynthesisUtterance(text);
     msg.lang = "en-US";
+    speechSynthesis.cancel();
     speechSynthesis.speak(msg);
   }
 
+  // start
+  startTimer();
   showQuiz();
 </script>
 
