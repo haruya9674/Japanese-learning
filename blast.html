@@ -1,3 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Blast Puzzle</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{
+  font-family:system-ui,sans-serif;
+  background:linear-gradient(180deg,#fff1f8,#e8f8ff);
+  text-align:center;
+  padding:16px;
+}
+a{display:inline-block;margin-bottom:8px;}
+.top{
+  display:flex;
+  justify-content:space-between;
+  max-width:320px;
+  margin:0 auto 10px;
+}
+.panel{
+  background:white;
+  padding:6px 10px;
+  border-radius:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,.2);
+  font-size:14px;
+}
+.grid{
+  display:grid;
+  gap:6px;
+  margin:0 auto;
+}
+.cell{
+  width:40px;
+  height:40px;
+  border-radius:10px;
+  cursor:pointer;
+}
+.red{background:#ff7675;}
+.blue{background:#74b9ff;}
+.yellow{background:#ffeaa7;}
+.green{background:#55efc4;}
+.purple{background:#a29bfe;}
+.rocket{background:#fd79a8;}
+.bomb{background:#2d3436;}
+#msg{margin-top:10px;font-size:18px;}
+</style>
+</head>
+
+<body>
+
+<a href="index.html">← メインメニュー</a>
+<h2 id="stage"></h2>
+
+<div class="top">
+  <div class="panel" id="moves"></div>
+  <div class="panel" id="goal"></div>
+</div>
+
+<div id="grid" class="grid"></div>
+<div id="msg"></div>
+
 <script>
 const STAGES=[
  {rows:6,cols:6,colors:4,moves:15,goal:{red:10}},
@@ -17,14 +79,15 @@ function initStage(){
   COLORS=["red","blue","yellow","green","purple"].slice(0,s.colors);
   movesLeft=s.moves;
   goal=JSON.parse(JSON.stringify(s.goal));
-
   board=[];
+
   for(let r=0;r<ROWS;r++){
     board[r]=[];
     for(let c=0;c<COLS;c++){
       board[r][c]={type:"color",value:randColor()};
     }
   }
+
   document.getElementById("stage").textContent=`Stage ${stage+1}`;
   document.getElementById("msg").textContent="";
   updateUI();
@@ -100,22 +163,17 @@ function flood(r,c,color,group,seen){
 
 function activate(r,c,type){
   board[r][c]=null;
-
   if(type==="rocket"){
     for(let i=0;i<COLS;i++) board[r][i]=null;
     for(let i=0;i<ROWS;i++) board[i][c]=null;
   }
-
   if(type==="bomb"){
     for(let dr=-2;dr<=2;dr++)
       for(let dc=-2;dc<=2;dc++){
         const nr=r+dr,nc=c+dc;
-        if(nr>=0&&nc>=0&&nr<ROWS&&nc<COLS){
-          board[nr][nc]=null;
-        }
+        if(nr>=0&&nc>=0&&nr<ROWS&&nc<COLS) board[nr][nc]=null;
       }
   }
-
   collapse();
   refill();
 }
@@ -160,3 +218,6 @@ function checkClear(){
 
 initStage();
 </script>
+
+</body>
+</html>
