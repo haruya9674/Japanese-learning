@@ -13,73 +13,75 @@
       padding: 20px;
     }
 
+    /* 共通：メインメニューに戻る */
     .back {
       display: inline-block;
-      margin-bottom: 10px;
-      padding: 8px 14px;
-      font-size: 14px;
+      margin-bottom: 14px;
+      padding: 10px 18px;
+      font-size: 15px;
       text-decoration: none;
       color: #333;
       background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      border-radius: 16px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
     }
 
     h1 {
-      margin-bottom: 5px;
+      margin-bottom: 4px;
     }
 
     .sub {
       font-size: 14px;
       color: #666;
-      margin-bottom: 15px;
+      margin-bottom: 16px;
     }
 
     .mode {
       display: flex;
       justify-content: center;
-      gap: 10px;
+      gap: 12px;
       margin-bottom: 20px;
     }
 
     .mode button {
-      padding: 10px 14px;
-      font-size: 14px;
+      padding: 12px 16px;
+      font-size: 15px;
       border: none;
-      border-radius: 12px;
+      border-radius: 14px;
       background: white;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+      cursor: pointer;
     }
 
     .grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      max-width: 320px;
+      gap: 14px;
+      max-width: 360px;
       margin: auto;
     }
 
     .card {
-      height: 70px;
-      font-size: 32px;
-      border-radius: 14px;
+      height: 80px;
+      font-size: 34px;
+      border-radius: 16px;
       background: white;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      box-shadow: 0 5px 10px rgba(0,0,0,0.18);
       cursor: pointer;
       user-select: none;
     }
 
     .card.open,
     .card.matched {
-      background: #fff7cc;
+      background: #fff4c2;
     }
 
     #message {
       font-size: 22px;
-      margin-top: 20px;
+      margin-top: 22px;
       min-height: 1.5em;
     }
   </style>
@@ -110,8 +112,8 @@
   let lock = false;
   let matchedCount = 0;
 
-  function shuffle(arr) {
-    return arr.sort(() => Math.random() - 0.5);
+  function shuffle(array) {
+    return array.sort(() => Math.random() - 0.5);
   }
 
   function startGame(icons) {
@@ -125,12 +127,12 @@
     cards = shuffle([...icons, ...icons]);
 
     cards.forEach(icon => {
-      const div = document.createElement("div");
-      div.className = "card";
-      div.textContent = "❓";
-      div.dataset.icon = icon;
-      div.onclick = () => flip(div);
-      grid.appendChild(div);
+      const card = document.createElement("div");
+      card.className = "card";
+      card.textContent = "❓";
+      card.dataset.icon = icon;
+      card.addEventListener("click", () => flip(card));
+      grid.appendChild(card);
     });
   }
 
@@ -179,7 +181,7 @@
           second.classList.remove("open");
           first = second = null;
           lock = false;
-        }, 800);
+        }, 900);
       }
     }
   }
@@ -187,10 +189,11 @@
   function speak(text) {
     const msg = new SpeechSynthesisUtterance(text);
     msg.lang = "en-US";
+    speechSynthesis.cancel();
     speechSynthesis.speak(msg);
   }
 
-  // start with emoji game
+  // 初期表示
   startEmoji();
 </script>
 
