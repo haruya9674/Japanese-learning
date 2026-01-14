@@ -15,7 +15,8 @@ body{
 
 a{
   text-decoration:none;
-  color:#333;
+  display:inline-block;
+  margin-bottom:8px;
 }
 
 .top{
@@ -28,7 +29,7 @@ a{
 .panel{
   background:white;
   padding:6px 10px;
-  border-radius:14px;
+  border-radius:12px;
   box-shadow:0 2px 6px rgba(0,0,0,.2);
   font-size:14px;
 }
@@ -42,34 +43,64 @@ a{
 .cell{
   width:42px;
   height:42px;
-  border-radius:12px;
+  border-radius:10px;
   cursor:pointer;
+  transition:transform .15s;
+}
 
+.cell:active{
+  transform:scale(0.92);
+}
+
+/* colors */
+.red{background:#ff7675;}
+.blue{background:#74b9ff;}
+.yellow{background:#ffeaa7;}
+.green{background:#55efc4;}
+.purple{background:#a29bfe;}
+
+/* specials */
+.rocket{
+  background:#fd79a8;
+  position:relative;
+}
+.rocket::after{
+  content:"🚀";
+  position:absolute;
+  inset:0;
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:22px;
-  font-weight:bold;
-  color:white;
-}
-
-.red{background:#ff7675;}
-.blue{background:#74b9ff;}
-.yellow{background:#ffeaa7; color:#333;}
-.green{background:#55efc4;}
-.purple{background:#a29bfe;}
-
-.rocket{
-  background:linear-gradient(135deg,#fd79a8,#e84393);
 }
 
 .bomb{
-  background:radial-gradient(circle,#555,#000);
+  background:#2d3436;
+  position:relative;
+}
+.bomb::after{
+  content:"💣";
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+}
+
+/* fade animation */
+.fade{
+  animation:fadeOut .45s ease-out forwards;
+}
+
+@keyframes fadeOut{
+  from{opacity:1;transform:scale(1);}
+  to{opacity:0;transform:scale(.3);}
 }
 
 #msg{
-  font-size:20px;
   margin-top:10px;
+  font-size:18px;
 }
 </style>
 </head>
@@ -88,6 +119,7 @@ a{
 <div id="msg"></div>
 
 <script>
+/* ===== STAGES ===== */
 const STAGES=[
  {rows:6,cols:6,colors:4,moves:15,goal:{red:10}},
  {rows:7,cols:7,colors:4,moves:18,goal:{blue:15}},
@@ -95,17 +127,16 @@ const STAGES=[
 ];
 
 let stage=0;
-let board=[];
-let ROWS,COLS,COLORS,movesLeft,goal;
+let board=[],ROWS,COLS,COLORS,movesLeft,goal;
 
+/* ===== INIT ===== */
 function randColor(){
   return COLORS[Math.floor(Math.random()*COLORS.length)];
 }
 
 function initStage(){
   const s=STAGES[stage];
-  ROWS=s.rows;
-  COLS=s.cols;
+  ROWS=s.rows; COLS=s.cols;
   COLORS=["red","blue","yellow","green","purple"].slice(0,s.colors);
   movesLeft=s.moves;
   goal=JSON.parse(JSON.stringify(s.goal));
@@ -124,6 +155,7 @@ function initStage(){
   draw();
 }
 
+/* ===== UI ===== */
 function updateUI(){
   document.getElementById("moves").textContent=`Moves: ${movesLeft}`;
   document.getElementById("goal").textContent=
@@ -135,21 +167,17 @@ function draw(){
   g.style.gridTemplateColumns=`repeat(${COLS},1fr)`;
   g.innerHTML="";
 
-  for(let r=0;r<ROWS;r++){
-    for(let c=0;c<COLS;c++){
-      const cell=board[r][c];
+  board.forEach((row,r)=>{
+    row.forEach((cell,c)=>{
       const d=document.createElement("div");
       d.className="cell "+(cell.type==="color"?cell.value:cell.type);
-
-      if(cell.type==="rocket") d.textContent="🚀";
-      if(cell.type==="bomb") d.textContent="💣";
-
       d.onclick=()=>tap(r,c);
       g.appendChild(d);
-    }
-  }
+    });
+  });
 }
 
+/* ===== GAME LOGIC ===== */
 function tap(r,c){
   if(movesLeft<=0) return;
   const cell=board[r][c];
@@ -170,9 +198,8 @@ function tap(r,c){
   else if(group.length>=4) special="rocket";
 
   group.forEach(([x,y])=>{
-    if(goal[board[x][y].value]>0){
-      goal[board[x][y].value]--;
-    }
+    markFade(x,y);
+    if(goal[board[x][y].value]>0) goal[board[x][y].value]--;
     board[x][y]=null;
   });
 
@@ -181,8 +208,11 @@ function tap(r,c){
     board[x][y]={type:special};
   }
 
-  collapse();
-  refill();
+  setTimeout(()=>{
+    collapse();
+    refill();
+  },450);
+
   useMove();
 }
 
@@ -191,7 +221,6 @@ function flood(r,c,color,group,seen){
   if(seen[k]||r<0||c<0||r>=ROWS||c>=COLS) return;
   const cell=board[r][c];
   if(!cell||cell.type!=="color"||cell.value!==color) return;
-
   seen[k]=1;
   group.push([r,c]);
   flood(r+1,c,color,group,seen);
@@ -201,11 +230,9 @@ function flood(r,c,color,group,seen){
 }
 
 function activate(r,c,type){
-  board[r][c]=null;
-
   if(type==="rocket"){
-    for(let i=0;i<COLS;i++) board[r][i]=null;
-    for(let i=0;i<ROWS;i++) board[i][c]=null;
+    for(let i=0;i<COLS;i++){ markFade(r,i); board[r][i]=null; }
+    for(let i=0;i<ROWS;i++){ markFade(i,c); board[i][c]=null; }
   }
 
   if(type==="bomb"){
@@ -213,25 +240,30 @@ function activate(r,c,type){
       for(let dc=-2;dc<=2;dc++){
         const nr=r+dr,nc=c+dc;
         if(nr>=0&&nc>=0&&nr<ROWS&&nc<COLS){
+          markFade(nr,nc);
           board[nr][nc]=null;
         }
       }
     }
   }
 
-  collapse();
-  refill();
+  setTimeout(()=>{
+    collapse();
+    refill();
+  },450);
+}
+
+function markFade(r,c){
+  const idx=r*COLS+c;
+  const el=document.getElementById("grid").children[idx];
+  if(el) el.classList.add("fade");
 }
 
 function collapse(){
   for(let c=0;c<COLS;c++){
     let stack=[];
-    for(let r=ROWS-1;r>=0;r--){
-      if(board[r][c]) stack.push(board[r][c]);
-    }
-    for(let r=ROWS-1;r>=0;r--){
-      board[r][c]=stack.shift()||null;
-    }
+    for(let r=ROWS-1;r>=0;r--) if(board[r][c]) stack.push(board[r][c]);
+    for(let r=ROWS-1;r>=0;r--) board[r][c]=stack.shift()||null;
   }
 }
 
@@ -265,6 +297,7 @@ function checkClear(){
   }
 }
 
+/* START */
 initStage();
 </script>
 
