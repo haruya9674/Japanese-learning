@@ -2,39 +2,70 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>メニュー</title>
+  <title>Play Menu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body {
       font-family: system-ui, sans-serif;
-      text-align: center;
-      padding: 40px;
       background: #f7f7f7;
+      text-align: center;
+      padding: 30px;
     }
     h1 {
       margin-bottom: 30px;
     }
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 320px;
+      margin: auto;
+    }
     a {
       display: block;
-      margin: 20px auto;
       padding: 20px;
-      max-width: 300px;
-      background: white;
-      border-radius: 12px;
+      font-size: 20px;
       text-decoration: none;
-      color: black;
-      font-size: 22px;
+      color: #333;
+      background: white;
+      border-radius: 14px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      line-height: 1.4;
+    }
+    .jp {
+      font-size: 18px;
+    }
+    .en {
+      font-size: 14px;
+      color: #666;
     }
   </style>
 </head>
 
 <body>
 
-<h1>あそぶメニュー</h1>
+<h1>
+  あそぶメニュー<br>
+  <span class="en">Play Menu</span>
+</h1>
 
-<a href="math.html">➕ たしざんクイズ</a>
+<div class="menu">
+  <a href="math.html">
+    <div class="jp">たしざんクイズ</div>
+    <div class="en">Addition Quiz</div>
+  </a>
+
+  <a href="math_lv2.html">
+    <div class="jp">たしざんクイズ LV2</div>
+    <div class="en">Addition Quiz Level 2</div>
+  </a>
+
+  <a href="math_lv3.html">
+    <div class="jp">たしざんクイズ LV3</div>
+    <div class="en">Addition Quiz Level 3</div>
+  </a>
+</div>
 
 </body>
 </html>
