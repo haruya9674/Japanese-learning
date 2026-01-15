@@ -24,12 +24,10 @@ a.back{
   box-shadow:0 2px 6px rgba(0,0,0,.2);
 }
 
-h2{margin:6px 0;}
-
 .top{
   display:flex;
   justify-content:space-between;
-  max-width:280px;
+  max-width:320px;
   margin:6px auto;
 }
 
@@ -43,19 +41,22 @@ h2{margin:6px 0;}
 
 .grid{
   display:grid;
+  grid-template-columns:repeat(6,1fr);
   gap:6px;
+  max-width:320px;
   margin:10px auto;
 }
 
 .cell{
-  width:42px;
-  height:42px;
+  width:40px;
+  height:40px;
   border-radius:10px;
   display:flex;
   align-items:center;
   justify-content:center;
   font-size:22px;
   cursor:pointer;
+  transition:transform .2s;
 }
 
 .red{background:#ff7675;}
@@ -72,6 +73,15 @@ h2{margin:6px 0;}
 }
 @keyframes fade{
   to{opacity:0;transform:scale(1.4);}
+}
+
+.combo{
+  animation:combo .25s;
+}
+@keyframes combo{
+  0%{transform:scale(1);}
+  50%{transform:scale(1.5);}
+  100%{transform:scale(1);}
 }
 
 #overlay{
@@ -102,18 +112,17 @@ h2{margin:6px 0;}
 
 <script>
 const COLORS=["red","blue","yellow","green","purple"];
-const COLS=6;
-const ROWS=8;
-const FADE=600;
+const ROWS=8, COLS=6;
+const FADE_TIME=600;
+const MAX_STAGE=100;
 
 let stage=Number(localStorage.getItem("blastStage")||1);
-let movesLeft,goal,board=[];
+let board=[], movesLeft=0, goal={};
 
-function stageData(){
-  const color = COLORS[stage % COLORS.length];
+function stageData(s){
   return{
-    moves:18+stage,
-    goals:{ [color]:12+stage }
+    moves:20+Math.floor(s/5),
+    goals:{ [COLORS[s%COLORS.length]]:12+Math.floor(s*1.2) }
   };
 }
 
@@ -122,7 +131,7 @@ function randColor(){
 }
 
 function init(){
-  const d=stageData();
+  const d=stageData(stage);
   movesLeft=d.moves;
   goal=JSON.parse(JSON.stringify(d.goals));
   board=[];
@@ -141,17 +150,14 @@ function init(){
 
 function updateUI(){
   document.getElementById("moves").textContent=`Moves: ${movesLeft}`;
-  document.getElementById("goal").textContent =
-    "Goal: " + Object.entries(goal)
-      .map(([k,v]) => `${k}:${Math.max(0, Number(v)||0)}`)
-      .join(" ");
+  document.getElementById("goal").textContent=
+    "Goal: "+Object.entries(goal)
+      .map(([k,v])=>`${k}:${Math.max(0,v||0)}`).join(" ");
 }
 
 function draw(){
   const g=document.getElementById("grid");
-  g.style.gridTemplateColumns=`repeat(${COLS},1fr)`;
   g.innerHTML="";
-
   for(let r=0;r<ROWS;r++){
     for(let c=0;c<COLS;c++){
       const cell=board[r][c];
@@ -160,6 +166,7 @@ function draw(){
       if(cell){
         d.classList.add(cell.type==="color"?cell.value:cell.type);
         if(cell.fade) d.classList.add("fade");
+        if(cell.combo) d.classList.add("combo");
         d.textContent=cell.type==="rocket"?"🚀":cell.type==="bomb"?"💣":"";
         d.onclick=()=>tap(r,c);
       }
@@ -182,14 +189,9 @@ function tap(r,c){
     else if(group.length>=4) special="rocket";
 
     group.forEach(([x,y])=>{
-      const v = board[x][y].value;
-      if(goal[v] !== undefined && goal[v] > 0){
-        goal[v]--;
-      }
-      board[x][y].fade=true;
+      countGoal(board[x][y]);
+      board[x][y]={fade:true};
     });
-
-    draw();
 
     setTimeout(()=>{
       group.forEach(([x,y])=>board[x][y]=null);
@@ -198,13 +200,13 @@ function tap(r,c){
         board[x][y]={type:special};
       }
       collapse(); refill();
-    },FADE);
+    },FADE_TIME);
 
-    endMove();
-    return;
+  }else{
+    activateSpecial(r,c,cell.type);
   }
 
-  activateSpecial(r,c,cell.type);
+  endMove();
 }
 
 function flood(r,c,color,g,s){
@@ -221,35 +223,48 @@ function flood(r,c,color,g,s){
 
 function activateSpecial(r,c,type){
   const targets=new Set();
-  const add=(x,y)=>{if(x>=0&&y>=0&&x<ROWS&&y<COLS) targets.add(x+","+y);};
+  const isBomb=type==="bomb";
+  const isRocket=type==="rocket";
 
-  if(type==="rocket"){
-    for(let i=0;i<COLS;i++) add(r,i);
-    for(let i=0;i<ROWS;i++) add(i,c);
+  board[r][c].combo=true;
+
+  if(isRocket){
+    for(let i=0;i<COLS;i++) targets.add(`${r},${i}`);
+    for(let i=0;i<ROWS;i++) targets.add(`${i},${c}`);
   }
 
-  if(type==="bomb"){
+  if(isBomb){
     for(let dr=-2;dr<=2;dr++)
-      for(let dc=-2;dc<=2;dc++)
-        add(r+dr,c+dc);
+      for(let dc=-2;dc<=2;dc++){
+        const nr=r+dr,nc=c+dc;
+        if(nr>=0&&nc>=0&&nr<ROWS&&nc<COLS)
+          targets.add(`${nr},${nc}`);
+      }
   }
 
-  targets.forEach(t=>{
-    const [x,y]=t.split(",").map(Number);
-    if(board[x][y]) board[x][y].fade=true;
+  targets.forEach(k=>{
+    const [x,y]=k.split(",").map(Number);
+    if(board[x][y]){
+      countGoal(board[x][y]);
+      board[x][y]={fade:true};
+    }
   });
 
   draw();
 
   setTimeout(()=>{
-    targets.forEach(t=>{
-      const [x,y]=t.split(",").map(Number);
+    targets.forEach(k=>{
+      const [x,y]=k.split(",").map(Number);
       board[x][y]=null;
     });
     collapse(); refill();
-  },FADE);
+  },FADE_TIME);
+}
 
-  endMove();
+function countGoal(cell){
+  if(cell.type==="color" && goal[cell.value]>0){
+    goal[cell.value]--;
+  }
 }
 
 function collapse(){
@@ -275,7 +290,7 @@ function endMove(){
     document.getElementById("overlay").style.display="flex";
     setTimeout(()=>{
       document.getElementById("overlay").style.display="none";
-      stage++;
+      stage=Math.min(stage+1,MAX_STAGE);
       localStorage.setItem("blastStage",stage);
       init();
     },1000);
