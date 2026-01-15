@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>たしざんクイズ LV1</title>
+  <title>Addition Quiz LV1</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -58,13 +58,14 @@
       display: inline-block;
       text-decoration: none;
       color: #333;
+      font-size:16px;
     }
   </style>
 </head>
 
 <body>
 
-<h1>たしざんクイズ LV1</h1>
+<h1>➕ Addition Quiz LV1</h1>
 <div class="timer" id="timer"></div>
 <div class="count" id="count"></div>
 
@@ -72,7 +73,7 @@
 <div class="grid" id="choices"></div>
 <div id="result"></div>
 
-<a class="back" href="index.html">← メニューにもどる</a>
+<a class="back" href="index.html">← 🏠 Main menu</a>
 
 <script>
   const quizzes = [
@@ -85,7 +86,6 @@
   let current = 0;
   let timeLeft = 60;
   let timer = null;
-  let locked = false;
 
   function startTimer() {
     updateTimer();
@@ -93,18 +93,16 @@
       timeLeft--;
       updateTimer();
 
-      if (timeLeft <= 0) {
-        clearInterval(timer);
-        locked = true;
-        document.getElementById("result").textContent = "⏰ Time up!";
-        speak("Time up");
+      if (timeLeft === 0) {
+        document.getElementById("result").textContent = "⏰ Time up! Keep going!";
+        speak("Time up. Keep going");
       }
     }, 1000);
   }
 
   function updateTimer() {
     document.getElementById("timer").textContent =
-      `⏱ のこり時間：${timeLeft}秒`;
+      `⏱ Time left: ${Math.max(timeLeft,0)}s`;
   }
 
   function makeChoices(answer) {
@@ -116,13 +114,11 @@
   }
 
   function showQuiz() {
-    if (locked) return;
-
     const q = quizzes[current];
     const answer = q.a + q.b;
 
     document.getElementById("count").textContent =
-      `もんだい ${current + 1} / ${quizzes.length}`;
+      `Question ${current + 1} / ${quizzes.length}`;
 
     document.getElementById("question").textContent =
       `${q.a} + ${q.b} = ?`;
@@ -141,12 +137,10 @@
   }
 
   function check(num, answer) {
-    if (locked) return;
-
     const result = document.getElementById("result");
 
     if (num === answer) {
-      result.textContent = "⭕ せいかい！";
+      result.textContent = "⭕ Correct!";
       speak("Correct");
 
       current++;
@@ -154,14 +148,14 @@
         setTimeout(showQuiz, 700);
       } else {
         clearInterval(timer);
-        document.getElementById("question").textContent = "🎉 クリア！";
+        document.getElementById("question").textContent = "🎉 Clear!";
         document.getElementById("choices").innerHTML = "";
         document.getElementById("count").textContent = "";
-        result.textContent = "Anna！すごい！";
+        result.textContent = "Great job, Anna!";
         speak("Great job Anna");
       }
     } else {
-      result.textContent = "❌ ちがうよ";
+      result.textContent = "❌ Try again";
       speak("Try again");
     }
   }
@@ -173,7 +167,6 @@
     speechSynthesis.speak(msg);
   }
 
-  // start
   startTimer();
   showQuiz();
 </script>
