@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Kanji Quiz</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  font-family:system-ui,sans-serif;
+  background:linear-gradient(180deg,#fff6fb,#eef9ff);
+  text-align:center;
+  padding:16px;
+}
+
+.back{
+  display:inline-block;
+  margin-bottom:10px;
+  padding:8px 14px;
+  background:white;
+  border-radius:12px;
+  text-decoration:none;
+  color:#333;
+  box-shadow:0 2px 6px rgba(0,0,0,.2);
+}
+
+h1{ font-size:24px; }
+
+.levels{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:12px;
+}
+
+.levels button{
+  padding:8px 14px;
+  border:none;
+  border-radius:12px;
+  background:white;
+  box-shadow:0 2px 6px rgba(0,0,0,.2);
+}
+
+.card{
+  background:white;
+  padding:16px;
+  border-radius:18px;
+  max-width:360px;
+  margin:14px auto;
+  box-shadow:0 4px 10px rgba(0,0,0,.15);
+}
+
+.emoji{ font-size:40px; }
+
+.big{ font-size:48px; margin:8px 0; }
+
+.en{ font-size:16px; color:#555; }
+.jp{ font-size:18px; }
+
+.choices{
+  display:grid;
+  gap:10px;
+  margin-top:12px;
+}
+
+button.choice{
+  padding:14px;
+  font-size:22px;
+  border:none;
+  border-radius:14px;
+  background:#f1f1f1;
+}
+
+#msg{
+  font-size:20px;
+  min-height:1.5em;
+  margin-top:10px;
+}
+
+/* stroke animation */
+.stroke{
+  width:120px;
+  height:120px;
+  margin:auto;
+}
+.line{
+  stroke:#333;
+  stroke-width:8;
+  fill:none;
+  stroke-dasharray:200;
+  stroke-dashoffset:200;
+  animation:draw 1s forwards;
+}
+.line2{ animation-delay:1s; }
+.line3{ animation-delay:2s; }
+
+@keyframes draw{
+  to{ stroke-dashoffset:0; }
+}
+</style>
+</head>
+
+<body>
+
+<a href="index.html" class="back">← Back to Menu</a>
+
+<h1>🈶 Kanji Quiz</h1>
+<div class="en">English → Kanji → Reading</div>
+
+<div class="levels">
+  <button onclick="setLevel(1)">Grade 1</button>
+  <button onclick="setLevel(2)">Grade 2</button>
+  <button onclick="setLevel(3)">Grade 3</button>
+</div>
+
+<div class="card">
+  <div class="emoji" id="emoji"></div>
+
+  <div class="en" id="step"></div>
+  <div class="big" id="main"></div>
+  <div class="jp" id="reading"></div>
+
+  <svg class="stroke" id="stroke"></svg>
+
+  <div class="choices" id="choices"></div>
+</div>
+
+<div id="msg"></div>
+
+<script>
+const DATA={
+  1:[
+    {k:"山", r:"やま", e:"mountain", emoji:"⛰️"},
+    {k:"川", r:"かわ", e:"river", emoji:"🏞️"},
+    {k:"木", r:"き", e:"tree", emoji:"🌳"},
+    {k:"日", r:"ひ", e:"sun", emoji:"☀️"}
+  ],
+  2:[
+    {k:"火", r:"ひ", e:"fire", emoji:"🔥"},
+    {k:"水", r:"みず", e:"water", emoji:"💧"},
+    {k:"人", r:"ひと", e:"person", emoji:"🧍"},
+    {k:"大", r:"おおきい", e:"big", emoji:"🐘"}
+  ],
+  3:[
+    {k:"森", r:"もり", e:"forest", emoji:"🌲"},
+    {k:"海", r:"うみ", e:"sea", emoji:"🌊"},
+    {k:"空", r:"そら", e:"sky", emoji:"☁️"},
+    {k:"電", r:"でん", e:"electric", emoji:"⚡"}
+  ]
+};
+
+let level=1, index=0, step=0;
+
+function setLevel(l){
+  level=l; index=0; step=0;
+  show();
+}
+
+function show(){
+  const q=DATA[level][index];
+  document.getElementById("emoji").textContent=q.emoji;
+  document.getElementById("msg").textContent="";
+  document.getElementById("stroke").innerHTML="";
+
+  if(step===0){
+    document.getElementById("step").textContent="English";
+    document.getElementById("main").textContent=q.e;
+    document.getElementById("reading").textContent="";
+    makeChoices();
+  }else if(step===1){
+    document.getElementById("step").textContent="Kanji";
+    document.getElementById("main").textContent=q.k;
+    document.getElementById("reading").textContent="";
+    showStroke();
+    makeChoices();
+  }else{
+    document.getElementById("step").textContent="Reading";
+    document.getElementById("main").textContent=q.k;
+    document.getElementById("reading").textContent=q.r;
+    makeChoices();
+  }
+}
+
+function makeChoices(){
+  const q=DATA[level][index];
+  const box=document.getElementById("choices");
+  box.innerHTML="";
+  const opts=[q.k,"✖","✖"].sort(()=>Math.random()-0.5);
+  opts.forEach(o=>{
+    const b=document.createElement("button");
+    b.className="choice";
+    b.textContent=o;
+    b.onclick=()=>check(o);
+    box.appendChild(b);
+  });
+}
+
+function check(ans){
+  const q=DATA[level][index];
+  if(ans===q.k){
+    speak("Correct");
+    step++;
+    if(step>2){
+      step=0; index++;
+      if(index>=DATA[level].length){
+        document.getElementById("msg").textContent="🎉 Clear!";
+        speak("Great job Anna");
+        return;
+      }
+    }
+    show();
+  }else{
+    speak("Try again");
+  }
+}
+
+function showStroke(){
+  const svg=document.getElementById("stroke");
+  svg.innerHTML=`
+    <path class="line" d="M20 40 L100 40"/>
+    <path class="line line2" d="M60 20 L60 100"/>
+  `;
+}
+
+function speak(t){
+  const u=new SpeechSynthesisUtterance(t);
+  u.lang="en-US";
+  speechSynthesis.speak(u);
+}
+
+show();
+</script>
+
+</body>
+</html>
