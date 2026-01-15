@@ -80,7 +80,7 @@ button{
 <body>
 
 <h1>☕🍺 ギリギリ注ぎチャレンジ<br><small>Perfect Pour Challenge</small></h1>
-<p>99%〜100%未満で成功 / Stop before overflow</p>
+<p>98%〜101%で成功 / Sweet Spot Challenge</p>
 
 <div class="mode">
   <button id="coffeeBtn" class="active" onclick="setMode('coffee')">☕ Coffee</button>
@@ -88,7 +88,7 @@ button{
 </div>
 
 <div class="cup">
-  <div class="line">100% LINE</div>
+  <div class="line">100%</div>
   <div id="liquid" class="liquid coffee"></div>
 </div>
 
@@ -114,35 +114,8 @@ let pouring = false;
 let finished = false;
 let mode = "coffee";
 
-// ==== Audio (liquid sound) ====
+// ==== Audio (success / fail only) ====
 const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-let noiseNode, gainNode;
-
-function startLiquidSound(){
-  const bufferSize = audioCtx.sampleRate;
-  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for(let i=0;i<bufferSize;i++){
-    data[i] = (Math.random()*2-1)*0.15;
-  }
-
-  noiseNode = audioCtx.createBufferSource();
-  noiseNode.buffer = buffer;
-  noiseNode.loop = true;
-
-  gainNode = audioCtx.createGain();
-  gainNode.gain.value = (mode==="coffee") ? 0.25 : 0.35;
-
-  noiseNode.connect(gainNode).connect(audioCtx.destination);
-  noiseNode.start();
-}
-
-function stopLiquidSound(){
-  if(noiseNode){
-    noiseNode.stop();
-    noiseNode = null;
-  }
-}
 
 function playBeep(freq){
   const o = audioCtx.createOscillator();
@@ -151,7 +124,7 @@ function playBeep(freq){
   o.start();
   o.stop(audioCtx.currentTime + 0.25);
 }
-// ==============================
+// ====================================
 
 function setMode(m){
   if(pouring) return;
@@ -174,16 +147,13 @@ function resetGame(){
 function startPour(){
   if(pouring || finished) return;
   pouring = true;
-  startLiquidSound();
 
   timer = setInterval(()=>{
-    let speed = (mode==="coffee")
-      ? Math.random()*1.1 + 0.9
-      : Math.random()*1.8 + 1.3;
-
+    // ☕🍺 同じスピード
+    let speed = Math.random()*1.4 + 1.0;
     level += speed;
 
-    if(level >= 100){
+    if(level > 101){
       stopPour(true);
     }else{
       document.getElementById("liquid").style.height = level + "%";
@@ -195,12 +165,11 @@ function stopPour(overflow=false){
   if(!pouring) return;
   clearInterval(timer);
   pouring = false;
-  stopLiquidSound();
   finished = true;
 
   const r = document.getElementById("result");
 
-  if(!overflow && level >= 99 && level < 100){
+  if(!overflow && level >= 98 && level <= 101){
     r.textContent = `🎉 SUCCESS! / 成功 (${level.toFixed(1)}%)`;
     r.className = "success";
     playBeep(880);
