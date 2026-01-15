@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>☕🍺 ギリギリ注ぎチャレンジ</title>
+<title>☕🍺 Perfect Pour Challenge</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -19,18 +19,12 @@ body{
 h1{ font-size:24px; margin-bottom:4px; }
 p{ margin:6px 0; }
 
-.mode{
-  margin:10px 0;
-}
-
 .mode button{
   padding:8px 14px;
-  font-size:14px;
-  margin:0 4px;
+  margin:4px;
   border-radius:10px;
   border:none;
 }
-
 .active{
   background:#333;
   color:white;
@@ -52,128 +46,132 @@ p{ margin:6px 0; }
   bottom:0;
   width:100%;
   height:0%;
-  transition:none;
 }
 
-.coffee{
-  background:linear-gradient(#6f4e37,#4b2e20);
-}
-
-.beer{
-  background:linear-gradient(#f6c453,#e3a617);
-}
+.coffee{ background:linear-gradient(#6f4e37,#4b2e20); }
+.beer{ background:linear-gradient(#f6c453,#e3a617); }
 
 .line{
   position:absolute;
-  top:10px;
+  top:13%;
   width:100%;
   border-top:3px dashed red;
   font-size:12px;
   color:red;
 }
 
-#pourBtn{
+button{
   padding:14px 22px;
-  font-size:18px;
+  font-size:16px;
   border-radius:14px;
   border:none;
-  background:#f2d6c3;
-  box-shadow:0 4px 10px rgba(0,0,0,.2);
+  margin:6px;
 }
 
-#pourBtn:active{
-  transform:scale(0.95);
-}
+#pourBtn:active{ transform:scale(0.95); }
 
-#result{
-  margin-top:12px;
-  font-weight:bold;
-  min-height:26px;
-}
-.success{ color:green; }
-.fail{ color:red; }
+.success{ color:green; font-weight:bold; }
+.fail{ color:red; font-weight:bold; }
 
-.back{
-  margin-top:14px;
-  display:inline-block;
-}
+.back{ display:block; margin-top:10px; }
 </style>
 </head>
 
 <body>
 
-<h1>☕🍺 ギリギリ注ぎチャレンジ</h1>
-<p>線に<strong>ほぼピッタリ</strong>で離そう</p>
+<h1>☕🍺 ギリギリ注ぎチャレンジ<br><small>Perfect Pour Challenge</small></h1>
+<p>線ピッタリで止めよう / Stop exactly on the line</p>
 
 <div class="mode">
-  <button id="coffeeBtn" class="active" onclick="setMode('coffee')">☕ コーヒー</button>
-  <button id="beerBtn" onclick="setMode('beer')">🍺 ビール</button>
+  <button id="coffeeBtn" class="active" onclick="setMode('coffee')">☕ Coffee</button>
+  <button id="beerBtn" onclick="setMode('beer')">🍺 Beer</button>
 </div>
 
 <div class="cup">
-  <div class="line">ここ！</div>
+  <div class="line">TARGET / 92%</div>
   <div id="liquid" class="liquid coffee"></div>
 </div>
 
-<button
-  id="pourBtn"
+<button id="pourBtn"
   onmousedown="startPour()"
   onmouseup="stopPour()"
   onmouseleave="stopPour()"
   ontouchstart="startPour()"
   ontouchend="stopPour()"
->
-押して注ぐ
-</button>
+>POUR / 注ぐ</button>
+
+<br>
+<button onclick="resetGame()">START / RESET</button>
 
 <p id="result"></p>
 
-<a href="index.html" class="back">← もどる</a>
+<a href="index.html" class="back">← BACK</a>
 
 <script>
 let level = 0;
 let timer = null;
 let pouring = false;
+let finished = false;
 let mode = "coffee";
 
-// 成功ライン（上から10%）
-const target = 90;
-// 許容誤差（激ムズ）
+// 成功ライン
+const target = 92;
 const tolerance = 1.5;
 
-function setMode(m){
-  mode = m;
-  document.getElementById("liquid").className =
-    "liquid " + (m === "coffee" ? "coffee" : "beer");
+// ==== Web Audio ====
+const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+let pourOsc;
 
-  document.getElementById("coffeeBtn").classList.toggle("active", m==="coffee");
-  document.getElementById("beerBtn").classList.toggle("active", m==="beer");
-
-  reset();
+function pourSound(start){
+  if(start){
+    pourOsc = audioCtx.createOscillator();
+    pourOsc.type = "sawtooth";
+    pourOsc.frequency.value = 180;
+    pourOsc.connect(audioCtx.destination);
+    pourOsc.start();
+  }else if(pourOsc){
+    pourOsc.stop();
+    pourOsc = null;
+  }
 }
 
-function reset(){
+function beep(freq){
+  const o = audioCtx.createOscillator();
+  o.frequency.value = freq;
+  o.connect(audioCtx.destination);
+  o.start();
+  o.stop(audioCtx.currentTime + 0.25);
+}
+
+// ====================
+
+function setMode(m){
+  if(pouring) return;
+  mode = m;
+  document.getElementById("liquid").className = "liquid " + m;
+  document.getElementById("coffeeBtn").classList.toggle("active", m==="coffee");
+  document.getElementById("beerBtn").classList.toggle("active", m==="beer");
+  resetGame();
+}
+
+function resetGame(){
   clearInterval(timer);
   pouring = false;
+  finished = false;
   level = 0;
   document.getElementById("liquid").style.height = "0%";
-  const r = document.getElementById("result");
-  r.textContent = "";
-  r.className = "";
+  document.getElementById("result").textContent = "";
 }
 
 function startPour(){
-  if(pouring) return;
+  if(pouring || finished) return;
   pouring = true;
+  pourSound(true);
 
-  timer = setInterval(() => {
-    let speed;
-
-    if(mode === "coffee"){
-      speed = Math.random() * 1.2 + 0.8;   // 安定だけど油断するとアウト
-    }else{
-      speed = Math.random() * 2.0 + 1.2;   // ビールは泡で暴れる
-    }
+  timer = setInterval(()=>{
+    let speed = (mode==="coffee")
+      ? Math.random()*1.2 + 0.8
+      : Math.random()*2.0 + 1.2;
 
     level += speed;
 
@@ -182,27 +180,29 @@ function startPour(){
     }else{
       document.getElementById("liquid").style.height = level + "%";
     }
-  }, 50);
+  },50);
 }
 
 function stopPour(overflow=false){
   if(!pouring) return;
-
   clearInterval(timer);
   pouring = false;
+  pourSound(false);
+  finished = true;
 
-  const result = document.getElementById("result");
   const diff = Math.abs(level - target);
+  const r = document.getElementById("result");
 
   if(!overflow && diff <= tolerance){
-    result.textContent = `🎉 神業！ ${level.toFixed(1)}%`;
-    result.className = "success";
-  }else if(!overflow){
-    result.textContent = `❌ 失敗… ${level.toFixed(1)}%`;
-    result.className = "fail";
+    r.textContent = `🎉 SUCCESS! / 成功 (${level.toFixed(1)}%)`;
+    r.className = "success";
+    beep(880);
   }else{
-    result.textContent = `💥 こぼれた！ ${level.toFixed(1)}%`;
-    result.className = "fail";
+    r.textContent = overflow
+      ? `💥 OVERFLOW! / こぼれた (${level.toFixed(1)}%)`
+      : `❌ FAIL / 失敗 (${level.toFixed(1)}%)`;
+    r.className = "fail";
+    beep(220);
   }
 }
 </script>
