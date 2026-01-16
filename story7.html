@@ -9,22 +9,14 @@
 body{
   font-family:system-ui,sans-serif;
   padding:20px;
+  padding-bottom:160px;
   background:linear-gradient(180deg,#fff6fb,#f0fbff);
   max-width:620px;
   margin:auto;
 }
 
-h1{
-  text-align:center;
-  margin-bottom:6px;
-}
-
-.sub{
-  text-align:center;
-  font-size:14px;
-  color:#666;
-  margin-bottom:20px;
-}
+h1{text-align:center;margin-bottom:6px;}
+.sub{text-align:center;font-size:14px;color:#666;margin-bottom:20px;}
 
 .story{
   background:white;
@@ -32,22 +24,42 @@ h1{
   border-radius:18px;
   box-shadow:0 6px 14px rgba(0,0,0,.15);
   font-size:18px;
-  line-height:1.7;
+  line-height:1.8;
 }
 
-.sentence{
-  margin-bottom:10px;
+.word{
   cursor:pointer;
+  border-radius:6px;
+}
+.word:active{
+  background:#ffe4f1;
 }
 
-.sentence:active{
-  background:#fff0f6;
-  border-radius:8px;
+/* ===== Dictionary ===== */
+.card{
+  margin-top:20px;
+  background:#ffffff;
+  padding:16px;
+  border-radius:18px;
+  box-shadow:0 6px 14px rgba(0,0,0,.15);
+}
+
+.label{font-size:13px;color:#666;margin-top:10px;}
+.text,.hiragana{font-size:18px;margin-top:4px;}
+.hiragana{cursor:pointer;}
+
+input{
+  width:100%;
+  padding:10px;
+  font-size:16px;
+  border-radius:12px;
+  border:1px solid #ccc;
+  margin-top:6px;
 }
 
 .controls{
   text-align:center;
-  margin-top:18px;
+  margin-top:20px;
 }
 
 button,a{
@@ -61,11 +73,6 @@ button,a{
   text-decoration:none;
   color:#333;
   box-shadow:0 4px 10px rgba(0,0,0,.2);
-  cursor:pointer;
-}
-
-button:active{
-  transform:scale(0.96);
 }
 </style>
 </head>
@@ -78,83 +85,164 @@ button:active{
 <div class="sub">The Silent Guardian</div>
 
 <div class="story" id="story">
-
-  <div class="sentence" onclick="speak(this)">
-    The cave became very quiet after the shadow disappeared.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    The child could hear only their own breathing.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    Suddenly, a tall stone figure appeared from the darkness.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    Its eyes glowed softly like stars.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    The guardian did not speak, but its presence felt kind.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    Slowly, it pointed toward a hidden path.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    The child understood this was a sign of trust.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    With courage, the child stepped onto the path.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    The guardian watched silently as the journey continued.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    A new chapter was about to begin.
-  </div>
-
+The cave became very quiet after the shadow disappeared.
+The child could hear only their own breathing.
+Suddenly, a tall stone figure appeared from the darkness.
+Its eyes glowed softly like stars.
+The guardian did not speak, but its presence felt kind.
+Slowly, it pointed toward a hidden path.
+The child understood this was a sign of trust.
+With courage, the child stepped onto the path.
+The guardian watched silently as the journey continued.
+A new chapter was about to begin.
 </div>
 
 <div class="controls">
   <button onclick="readAll()">🔊 Read All</button>
+  <a href="story6.html">← Previous Story</a>
   <a href="story8.html">Next Story →</a>
 </div>
 
+<div class="card">
+  <div class="label">🔤 Word Checker</div>
+  <input id="miniEng" placeholder="Tap a word or type…" oninput="miniProcess()">
+
+  <div class="label">Japanese</div>
+  <div class="text" id="miniJP">—</div>
+
+  <div class="label">Reading (Hiragana)</div>
+  <div class="hiragana" id="miniHira" onclick="speakJP(miniHira.innerText)">—</div>
+
+  <button onclick="speakEN()">🔊 English</button>
+  <button onclick="speakJP(miniJP.innerText)">🔊 日本語</button>
+</div>
+
 <script>
-function createVoice(text){
-  const msg = new SpeechSynthesisUtterance(text);
-  msg.lang = "en-US";
-  msg.rate = 0.6;    // very slow
-  msg.pitch = 1.4;  // gentle & cute
-  msg.volume = 1.0;
+/* ===== Dictionary (Story7 全単語対応) ===== */
+const dict={
+the:{jp:"その",hira:"その"},
+cave:{jp:"洞窟",hira:"どうくつ"},
+became:{jp:"〜になった",hira:"なった"},
+very:{jp:"とても",hira:"とても"},
+quiet:{jp:"静かな",hira:"しずかな"},
+after:{jp:"〜の後で",hira:"あとで"},
+shadow:{jp:"影",hira:"かげ"},
+disappeared:{jp:"消えた",hira:"きえた"},
+child:{jp:"子ども",hira:"こども"},
+could:{jp:"〜できた",hira:"できた"},
+hear:{jp:"聞く",hira:"きく"},
+only:{jp:"だけ",hira:"だけ"},
+their:{jp:"彼らの",hira:"かれらの"},
+own:{jp:"自分の",hira:"じぶんの"},
+breathing:{jp:"呼吸",hira:"こきゅう"},
+suddenly:{jp:"突然",hira:"とつぜん"},
+a:{jp:"一つの",hira:"ひとつの"},
+tall:{jp:"背の高い",hira:"せのたかい"},
+stone:{jp:"石",hira:"いし"},
+figure:{jp:"姿",hira:"すがた"},
+appeared:{jp:"現れた",hira:"あらわれた"},
+from:{jp:"〜から",hira:"から"},
+darkness:{jp:"暗闇",hira:"くらやみ"},
+its:{jp:"それの",hira:"それの"},
+eyes:{jp:"目",hira:"め"},
+glowed:{jp:"光った",hira:"ひかった"},
+softly:{jp:"やさしく",hira:"やさしく"},
+like:{jp:"〜のように",hira:"のように"},
+stars:{jp:"星",hira:"ほし"},
+guardian:{jp:"守護者",hira:"しゅごしゃ"},
+did:{jp:"した",hira:"した"},
+not:{jp:"〜しない",hira:"しない"},
+speak:{jp:"話す",hira:"はなす"},
+but:{jp:"しかし",hira:"しかし"},
+presence:{jp:"存在",hira:"そんざい"},
+felt:{jp:"感じた",hira:"かんじた"},
+kind:{jp:"優しい",hira:"やさしい"},
+slowly:{jp:"ゆっくり",hira:"ゆっくり"},
+it:{jp:"それは",hira:"それは"},
+pointed:{jp:"指さした",hira:"ゆびさした"},
+toward:{jp:"〜の方へ",hira:"ほうへ"},
+hidden:{jp:"隠された",hira:"かくされた"},
+path:{jp:"道",hira:"みち"},
+understood:{jp:"理解した",hira:"りかいした"},
+this:{jp:"これは",hira:"これは"},
+was:{jp:"〜だった",hira:"だった"},
+sign:{jp:"しるし",hira:"しるし"},
+of:{jp:"〜の",hira:"の"},
+trust:{jp:"信頼",hira:"しんらい"},
+with:{jp:"〜と共に",hira:"とともに"},
+courage:{jp:"勇気",hira:"ゆうき"},
+stepped:{jp:"足を踏み出した",hira:"あしをふみだした"},
+onto:{jp:"〜の上へ",hira:"うえへ"},
+watched:{jp:"見守った",hira:"みまもった"},
+silently:{jp:"静かに",hira:"しずかに"},
+as:{jp:"〜しながら",hira:"しながら"},
+journey:{jp:"旅",hira:"たび"},
+continued:{jp:"続いた",hira:"つづいた"},
+new:{jp:"新しい",hira:"あたらしい"},
+chapter:{jp:"章",hira:"しょう"},
+about:{jp:"〜しようとして",hira:"しようとして"},
+to:{jp:"〜する",hira:"する"},
+begin:{jp:"始まる",hira:"はじまる"}
+};
 
-  const voices = speechSynthesis.getVoices();
-  const soft = voices.find(v =>
-    v.lang.startsWith("en") &&
-    (v.name.includes("Female") || v.name.includes("Samantha"))
-  );
+/* ===== Word Tap ===== */
+const storyEl=document.getElementById("story");
+const originalText=storyEl.innerText;
 
-  if(soft) msg.voice = soft;
-  return msg;
+storyEl.innerHTML=originalText.split(/(\s+)/).map(w=>{
+  if(/\s+/.test(w)) return w;
+  const clean=w.toLowerCase().replace(/[^a-z]/g,"");
+  return `<span class="word" onclick="selectWord('${clean}')">${w}</span>`;
+}).join("");
+
+function selectWord(w){
+  miniEng.value=w;
+  miniProcess();
+  speakEN();
 }
 
-function speak(el){
+/* ===== Dictionary ===== */
+function miniProcess(){
+  const w=miniEng.value.toLowerCase().trim();
+  if(dict[w]){
+    miniJP.innerText=dict[w].jp;
+    miniHira.innerText=dict[w].hira;
+  }else{
+    miniJP.innerText="—";
+    miniHira.innerText="—";
+  }
+}
+
+/* ===== Speech ===== */
+function gentleEN(text){
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="en-US";
+  u.rate=0.5;
+  u.pitch=1.3;
+  const v=speechSynthesis.getVoices().find(v=>v.lang.startsWith("en")&&v.name.includes("Female"));
+  if(v) u.voice=v;
+  return u;
+}
+
+function speakEN(){
+  if(!miniEng.value) return;
   speechSynthesis.cancel();
-  speechSynthesis.speak(createVoice(el.innerText));
+  speechSynthesis.speak(gentleEN(miniEng.value));
+}
+
+function speakJP(t){
+  if(t==="—") return;
+  const u=new SpeechSynthesisUtterance(t);
+  u.lang="ja-JP";
+  u.rate=0.5;
+  u.pitch=1.2;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
 }
 
 function readAll(){
   speechSynthesis.cancel();
-  const sentences = document.querySelectorAll(".sentence");
-  sentences.forEach(s=>{
-    speechSynthesis.speak(createVoice(s.innerText));
-  });
+  speechSynthesis.speak(gentleEN(originalText));
 }
 </script>
 
