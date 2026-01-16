@@ -13,63 +13,31 @@ body{
   max-width:640px;
   margin:auto;
 }
-
-h1{
-  text-align:center;
-  margin-bottom:12px;
-}
-
+h1{text-align:center;margin-bottom:12px;}
 input{
-  width:100%;
-  padding:14px;
-  font-size:18px;
-  border-radius:14px;
-  border:1px solid #ccc;
+  width:100%;padding:14px;font-size:18px;
+  border-radius:14px;border:1px solid #ccc;
   margin-bottom:14px;
 }
-
 .card{
-  background:white;
-  padding:16px;
-  border-radius:18px;
+  background:white;padding:16px;border-radius:18px;
   box-shadow:0 6px 14px rgba(0,0,0,.15);
   margin-bottom:14px;
 }
-
-.label{
-  font-size:13px;
-  color:#666;
-  margin-bottom:6px;
-}
-
-.text{
-  font-size:20px;
-}
-
+.label{font-size:13px;color:#666;margin-bottom:6px;}
+.text{font-size:20px;}
 .hiragana{
-  font-size:20px;
-  background:#fff0f6;
-  padding:10px;
-  border-radius:12px;
-  cursor:pointer;
+  font-size:20px;background:#fff0f6;
+  padding:10px;border-radius:12px;cursor:pointer;
 }
-
 button,a{
-  padding:12px 18px;
-  border:none;
-  border-radius:14px;
-  font-size:16px;
-  background:white;
+  padding:12px 18px;border:none;border-radius:14px;
+  font-size:16px;background:white;
   box-shadow:0 4px 10px rgba(0,0,0,.2);
-  cursor:pointer;
-  margin:6px;
-  text-decoration:none;
-  color:#333;
+  cursor:pointer;margin:6px;
+  text-decoration:none;color:#333;
 }
-
-button:active{
-  transform:scale(0.96);
-}
+button:active{transform:scale(0.96);}
 </style>
 </head>
 
@@ -98,19 +66,11 @@ button:active{
 </div>
 
 <script>
-// 子ども向け・固定表示辞書（ここにある単語だけ表示される）
 const dictionary = {
-  apple:{jp:"りんご", hira:"りんご"},
-  dog:{jp:"いぬ", hira:"いぬ"},
-  cat:{jp:"ねこ", hira:"ねこ"},
-  monster:{jp:"モンスター", hira:"もんすたー"},
-  forest:{jp:"森", hira:"もり"},
-  light:{jp:"光", hira:"ひかり"},
-  dark:{jp:"暗やみ", hira:"くらやみ"},
-  hero:{jp:"英雄", hira:"えいゆう"},
-  child:{jp:"子ども", hira:"こども"}
-  
-  /* ===== Story Words ===== */
+  apple:{jp:"りんご",hira:"りんご"},
+  dog:{jp:"いぬ",hira:"いぬ"},
+  cat:{jp:"ねこ",hira:"ねこ"},
+
   child:{jp:"子ども",hira:"こども"},
   guardian:{jp:"守護者",hira:"しゅごしゃ"},
   forest:{jp:"森",hira:"もり"},
@@ -119,7 +79,7 @@ const dictionary = {
   stone:{jp:"石",hira:"いし"},
   journey:{jp:"旅",hira:"たび"},
   trial:{jp:"試練",hira:"しれん"},
-  brave:{jp:"勇敢な",hira:"ゆうかんな"},
+  courage:{jp:"勇気",hira:"ゆうき"},
   fear:{jp:"恐れ",hira:"おそれ"},
   hope:{jp:"希望",hira:"きぼう"},
   destiny:{jp:"運命",hira:"うんめい"},
@@ -146,146 +106,59 @@ const dictionary = {
   morning:{jp:"朝",hira:"あさ"},
   sunshine:{jp:"日ざし",hira:"ひざし"},
 
-  /* ===== Elementary Basics ===== */
   boy:{jp:"男の子",hira:"おとこのこ"},
   girl:{jp:"女の子",hira:"おんなのこ"},
-  hand:{jp:"手",hira:"て"},
-  eye:{jp:"目",hira:"め"},
-  face:{jp:"顔",hira:"かお"},
   sun:{jp:"太陽",hira:"たいよう"},
   moon:{jp:"月",hira:"つき"},
   star:{jp:"星",hira:"ほし"},
   sky:{jp:"空",hira:"そら"},
   tree:{jp:"木",hira:"き"},
   river:{jp:"川",hira:"かわ"},
-  day:{jp:"昼・日",hira:"ひ"},
   happy:{jp:"うれしい",hira:"うれしい"},
   sad:{jp:"かなしい",hira:"かなしい"},
-  scared:{jp:"こわい",hira:"こわい"},
-  angry:{jp:"おこっている",hira:"おこっている"},
-  go:{jp:"行く",hira:"いく"},
-  come:{jp:"来る",hira:"くる"},
-  walk:{jp:"歩く",hira:"あるく"},
-  run:{jp:"走る",hira:"はしる"},
-  see:{jp:"見る",hira:"みる"},
-  hear:{jp:"聞く",hira:"きく"},
-  speak:{jp:"話す",hira:"はなす"},
-  hold:{jp:"持つ",hira:"もつ"},
-  good:{jp:"良い",hira:"よい"},
-  bad:{jp:"悪い",hira:"わるい"},
-  big:{jp:"大きい",hira:"おおきい"},
-  small:{jp:"小さい",hira:"ちいさい"},
-  new:{jp:"新しい",hira:"あたらしい"},
-  old:{jp:"古い",hira:"ふるい"}
-  /* ===== Story Core ===== */
-child:{jp:"子ども",hira:"こども"},
-guardian:{jp:"守護者",hira:"しゅごしゃ"},
-shadow:{jp:"影",hira:"かげ"},
-light:{jp:"光",hira:"ひかり"},
-stone:{jp:"石",hira:"いし"},
-journey:{jp:"旅",hira:"たび"},
-trial:{jp:"試練",hira:"しれん"},
-courage:{jp:"勇気",hira:"ゆうき"},
-destiny:{jp:"運命",hira:"うんめい"},
-enemy:{jp:"敵",hira:"てき"},
-protect:{jp:"守る",hira:"まもる"},
-power:{jp:"力",hira:"ちから"},
-darkness:{jp:"暗闇",hira:"くらやみ"},
-silence:{jp:"静けさ",hira:"しずけさ"},
-path:{jp:"道",hira:"みち"},
-cave:{jp:"洞くつ",hira:"どうくつ"},
-mountain:{jp:"山",hira:"やま"},
-wind:{jp:"風",hira:"かぜ"},
-hope:{jp:"希望",hira:"きぼう"},
-future:{jp:"未来",hira:"みらい"},
-
-/* ===== Verbs ===== */
-go:{jp:"行く",hira:"いく"},
-come:{jp:"来る",hira:"くる"},
-walk:{jp:"歩く",hira:"あるく"},
-run:{jp:"走る",hira:"はしる"},
-jump:{jp:"跳ぶ",hira:"とぶ"},
-stop:{jp:"止まる",hira:"とまる"},
-start:{jp:"始める",hira:"はじめる"},
-open:{jp:"開ける",hira:"あける"},
-close:{jp:"閉める",hira:"しめる"},
-look:{jp:"見る",hira:"みる"},
-see:{jp:"見る",hira:"みる"},
-watch:{jp:"見る",hira:"みる"},
-hear:{jp:"聞く",hira:"きく"},
-listen:{jp:"聞く",hira:"きく"},
-speak:{jp:"話す",hira:"はなす"},
-say:{jp:"言う",hira:"いう"},
-tell:{jp:"伝える",hira:"つたえる"},
-ask:{jp:"たずねる",hira:"たずねる"},
-answer:{jp:"答える",hira:"こたえる"},
-think:{jp:"考える",hira:"かんがえる"},
-know:{jp:"知っている",hira:"しっている"},
-learn:{jp:"学ぶ",hira:"まなぶ"},
-teach:{jp:"教える",hira:"おしえる"},
-help:{jp:"助ける",hira:"たすける"},
-try:{jp:"試す",hira:"ためす"},
-make:{jp:"作る",hira:"つくる"},
-take:{jp:"取る",hira:"とる"},
-give:{jp:"あげる",hira:"あげる"},
-bring:{jp:"持ってくる",hira:"もってくる"},
-find:{jp:"見つける",hira:"みつける"},
-lose:{jp:"失う",hira:"うしなう"},
-win:{jp:"勝つ",hira:"かつ"},
-stand:{jp:"立つ",hira:"たつ"},
-sit:{jp:"座る",hira:"すわる"},
-sleep:{jp:"眠る",hira:"ねむる"},
-wake:{jp:"起きる",hira:"おきる"},
-eat:{jp:"食べる",hira:"たべる"},
-drink:{jp:"飲む",hira:"のむ"},
-play:{jp:"遊ぶ",hira:"あそぶ"},
-work:{jp:"働く",hira:"はたらく"},
+  scared:{jp:"こわい",hira:"こわい"}
 };
 
 function process(){
-  const text = eng.value.toLowerCase().trim();
+  const text = eng.value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z]/g,"");
 
   if(!text){
-    jp.innerText = "—";
-    hira.innerText = "—";
+    jp.innerText="—";
+    hira.innerText="—";
     return;
   }
 
   if(dictionary[text]){
-    jp.innerText = dictionary[text].jp;
-    hira.innerText = dictionary[text].hira;
+    jp.innerText=dictionary[text].jp;
+    hira.innerText=dictionary[text].hira;
   }else{
-    // ★ 問題の原因だった文言は完全削除 ★
-    jp.innerText = "—";
-    hira.innerText = "—";
+    jp.innerText="";
+    hira.innerText="";
   }
 }
 
 function speakEN(){
   if(!eng.value) return;
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(eng.value);
-  u.lang = "en-US";
-  u.rate = 0.6;
-  u.pitch = 1.2;
+  const u=new SpeechSynthesisUtterance(eng.value);
+  u.lang="en-US";u.rate=0.6;u.pitch=1.2;
   speechSynthesis.speak(u);
 }
-
 function speakJP(){
-  if(jp.innerText === "—") return;
+  if(jp.innerText==="—"||!jp.innerText) return;
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(jp.innerText);
-  u.lang = "ja-JP";
-  u.rate = 0.6;
+  const u=new SpeechSynthesisUtterance(jp.innerText);
+  u.lang="ja-JP";u.rate=0.6;
   speechSynthesis.speak(u);
 }
-
 function speakHira(){
-  if(hira.innerText === "—") return;
+  if(hira.innerText==="—"||!hira.innerText) return;
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(hira.innerText);
-  u.lang = "ja-JP";
-  u.rate = 0.5;
+  const u=new SpeechSynthesisUtterance(hira.innerText);
+  u.lang="ja-JP";u.rate=0.5;
   speechSynthesis.speak(u);
 }
 </script>
