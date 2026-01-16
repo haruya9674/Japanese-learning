@@ -1,25 +1,77 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Adjective Games</title>
+<title>Adjective Game Hub</title>
 
 <style>
-body{font-family:system-ui;background:#f2f8ff;padding:15px}
+body{
+  font-family:system-ui,sans-serif;
+  background:#f0f8ff;
+  padding:16px;
+}
 h1{text-align:center}
-.tabs{display:flex;flex-wrap:wrap}
-.tab{flex:1;padding:10px;margin:2px;background:#ddd;border-radius:6px;text-align:center}
-.tab.active{background:#4db6ff;color:#fff;font-weight:bold}
-.game{display:none;margin-top:15px}
+.tabs{display:flex;flex-wrap:wrap;margin-bottom:16px}
+.tab{
+  flex:1;
+  min-width:110px;
+  margin:3px;
+  padding:10px;
+  text-align:center;
+  background:#ddd;
+  border-radius:8px;
+  cursor:pointer;
+}
+.tab.active{background:#87ceeb;font-weight:bold}
+.game{display:none}
 .game.active{display:block}
-.word{font-size:24px;font-weight:bold;margin:15px 0}
-button{padding:12px 16px;font-size:16px;margin:6px;border-radius:6px}
-.score{font-weight:bold;margin-top:10px}
-.feedback{height:24px;margin-top:8px;font-size:18px}
+
+button{
+  padding:10px 16px;
+  font-size:16px;
+  margin:6px;
+  border-radius:8px;
+}
+
+.word-box{
+  font-size:26px;
+  font-weight:bold;
+  margin:20px 0;
+}
+
+.feedback{
+  font-size:18px;
+  margin-top:10px;
+}
 .correct{color:green}
 .wrong{color:red}
-span.choice{display:inline-block;padding:6px 10px;margin:4px;border:1px solid #888;border-radius:4px}
+
+.score{font-weight:bold;margin-top:10px}
+
+.word{
+  display:inline-block;
+  padding:6px 8px;
+  border:1px solid #ccc;
+  margin:3px;
+  border-radius:6px;
+}
+
+.dropzone{
+  display:inline-block;
+  padding:12px;
+  margin:6px;
+  border:2px dashed #aaa;
+  border-radius:8px;
+}
+.draggable{
+  display:inline-block;
+  padding:8px;
+  margin:6px;
+  border:1px solid #aaa;
+  border-radius:8px;
+  background:#fff;
+}
 </style>
 </head>
 
@@ -28,172 +80,145 @@ span.choice{display:inline-block;padding:6px 10px;margin:4px;border:1px solid #8
 <h1>Adjective Games</h1>
 
 <div class="tabs">
-  <div class="tab active" data-g="g1">1 Judge</div>
-  <div class="tab" data-g="g2">2 Classify</div>
-  <div class="tab" data-g="g3">3 Find</div>
-  <div class="tab" data-g="g4">4 Fill</div>
-  <div class="tab" data-g="g5">5 Speed</div>
+  <div class="tab active" data-game="g1">1 Judge</div>
+  <div class="tab" data-game="g2">2 Classify</div>
+  <div class="tab" data-game="g3">3 Find</div>
+  <div class="tab" data-game="g4">4 Fill</div>
+  <div class="tab" data-game="g5">5 Speed</div>
 </div>
 
+<!-- Game 1 -->
 <div id="g1" class="game active">
-  <div id="g1word" class="word"></div>
-  <button id="g1yes">Adjective</button>
-  <button id="g1no">Not Adjective</button>
-  <div id="g1fb" class="feedback"></div>
-  <div id="g1score" class="score">Score: 0</div>
+  <div class="word-box" id="w1"></div>
+  <button id="b1a">Adjective</button>
+  <button id="b1b">Not</button>
+  <div id="f1" class="feedback"></div>
+  <div id="s1" class="score">Score: 0</div>
 </div>
 
+<!-- Game 2 -->
 <div id="g2" class="game">
-  <div id="g2word" class="word"></div>
-  <button data-t="Size">Size</button>
-  <button data-t="Feeling">Feeling</button>
-  <button data-t="Condition">Condition</button>
-  <div id="g2score" class="score">Score: 0</div>
+  <div id="d2"></div>
+  <div id="z2"></div>
+  <div id="s2" class="score">Score: 0</div>
 </div>
 
+<!-- Game 3 -->
 <div id="g3" class="game">
-  <div id="g3sent"></div>
-  <div id="g3score" class="score">Score: 0</div>
+  <div id="sent3"></div>
+  <div id="s3" class="score">Score: 0</div>
 </div>
 
+<!-- Game 4 -->
 <div id="g4" class="game">
-  <div id="g4sent"></div>
-  <div id="g4opts"></div>
-  <div id="g4score" class="score">Score: 0</div>
+  <div id="sent4"></div>
+  <div id="opt4"></div>
+  <div id="s4" class="score">Score: 0</div>
 </div>
 
+<!-- Game 5 -->
 <div id="g5" class="game">
-  <div id="g5word" class="word"></div>
-  <button id="g5yes">Adjective</button>
-  <button id="g5no">Not Adjective</button>
-  <div id="g5fb" class="feedback"></div>
-  <div id="g5score" class="score">Score: 0</div>
+  <div class="word-box" id="w5"></div>
+  <button id="b5a">Adjective</button>
+  <button id="b5b">Not</button>
+  <div id="f5" class="feedback"></div>
+  <div id="s5" class="score">Score: 0</div>
 </div>
 
 <script>
-/* ===== 共通 ===== */
-const speak=t=>{
+/* ---------- common ---------- */
+function speak(t){
   speechSynthesis.cancel();
-  speechSynthesis.speak(new SpeechSynthesisUtterance(t));
-};
+  const u=new SpeechSynthesisUtterance(t);
+  u.lang="en-US";
+  speechSynthesis.speak(u);
+}
 
-const adjectives=[
- {w:"big",t:"Size"},{w:"small",t:"Size"},
- {w:"happy",t:"Feeling"},{w:"sad",t:"Feeling"},
- {w:"clean",t:"Condition"},{w:"dirty",t:"Condition"}
-];
-const nonAdj=["run","eat","book","school"];
+const adjectives=[ "big","small","happy","sad","clean","dirty","fast","slow","hot","cold",
+"easy","difficult","safe","dangerous","strong","weak","kind","polite","healthy","tired",
+"hungry","interesting","boring","funny","bright","dark","quiet","loud","careful","ready",
+"heavy","light","cheap","expensive","early","late","busy","free","correct","wrong",
+"friendly","angry","proud","brave","nervous","simple","modern","traditional","popular","useful" ];
 
-/* ===== Tab ===== */
-document.querySelectorAll(".tab").forEach(tab=>{
-  tab.addEventListener("pointerdown",()=>{
+const nonAdj=[ "run","eat","drink","jump","sleep","book","pen","dog","cat","apple",
+"school","teacher","student","quickly","slowly","today","tomorrow","under","over","and",
+"but","because","he","she","they","play","watch","listen","go","come","make","take" ];
+
+const pool=[...adjectives.map(w=>({w,a:true})),...nonAdj.map(w=>({w,a:false}))];
+
+/* ---------- tabs ---------- */
+document.querySelectorAll(".tab").forEach(t=>{
+  t.addEventListener("click",()=>{
     document.querySelectorAll(".tab,.game").forEach(x=>x.classList.remove("active"));
-    tab.classList.add("active");
-    document.getElementById(tab.dataset.g).classList.add("active");
+    t.classList.add("active");
+    document.getElementById(t.dataset.game).classList.add("active");
   });
 });
 
-/* ===== Game1 ===== */
-let g1score=0,g1idx=0;
-function g1next(){
-  g1idx=Math.floor(Math.random()*adjectives.length);
-  g1word.textContent=adjectives[g1idx].w;
+/* ---------- Game1 ---------- */
+let s1=0,i1;
+function next1(){
+  i1=Math.floor(Math.random()*pool.length);
+  w1.textContent=pool[i1].w;
+  f1.textContent="";
 }
-function g1judge(ok){
-  g1fb.textContent=ok?"Correct":"Wrong";
-  g1fb.className="feedback "+(ok?"correct":"wrong");
+function judge1(a){
+  const ok=a===pool[i1].a;
+  f1.textContent=ok?"Correct":"Wrong";
+  f1.className="feedback "+(ok?"correct":"wrong");
   speak(ok?"Correct":"Wrong");
-  if(ok){g1score++;g1scoreEl.textContent="Score: "+g1score;}
-  setTimeout(g1next,600);
+  if(ok){s1++;s1El.textContent="Score: "+s1;}
+  setTimeout(next1,600);
 }
-const g1scoreEl=document.getElementById("g1score");
-document.getElementById("g1yes").addEventListener("pointerdown",()=>g1judge(true));
-document.getElementById("g1no").addEventListener("pointerdown",()=>g1judge(false));
-g1next();
-
-/* ===== Game2 ===== */
-let g2score=0,g2idx=0;
-function g2next(){
-  g2idx=Math.floor(Math.random()*adjectives.length);
-  g2word.textContent=adjectives[g2idx].w;
-}
-document.querySelectorAll("#g2 button").forEach(b=>{
-  b.addEventListener("pointerdown",()=>{
-    const ok=b.dataset.t===adjectives[g2idx].t;
-    speak(ok?"Correct":"Wrong");
-    if(ok){g2score++;g2scoreEl.textContent="Score: "+g2score;}
-    g2next();
-  });
+const w1=document.getElementById("w1"),
+f1=document.getElementById("f1"),
+s1El=document.getElementById("s1");
+["click","touchstart"].forEach(e=>{
+  b1a.addEventListener(e,x=>{x.preventDefault();judge1(true)});
+  b1b.addEventListener(e,x=>{x.preventDefault();judge1(false)});
 });
-const g2scoreEl=document.getElementById("g2score");
-g2next();
+next1();
 
-/* ===== Game3 ===== */
-let g3score=0;
-const g3sentences=[
- "The happy dog is big.",
- "The room is clean."
+/* ---------- Game2 ---------- */
+let s2=0;
+const types=["Size","Feeling","Condition"];
+const classify=[
+ {w:"big",t:"Size"},{w:"small",t:"Size"},{w:"heavy",t:"Size"},
+ {w:"happy",t:"Feeling"},{w:"sad",t:"Feeling"},{w:"angry",t:"Feeling"},
+ {w:"clean",t:"Condition"},{w:"dirty",t:"Condition"},{w:"safe",t:"Condition"}
 ];
-function g3next(){
-  g3sent.innerHTML="";
-  g3sentences[Math.floor(Math.random()*g3sentences.length)]
-    .split(" ").forEach(w=>{
-      const s=document.createElement("span");
-      s.textContent=w+" ";
-      s.className="choice";
-      s.addEventListener("pointerdown",()=>{
-        const ok=adjectives.some(a=>a.w===w.replace(/\W/g,""));
-        speak(ok?"Correct":"Wrong");
-        if(ok){g3score++;g3scoreEl.textContent="Score: "+g3score;}
-        g3next();
-      });
-      g3sent.appendChild(s);
-    });
-}
-const g3scoreEl=document.getElementById("g3score");
-g3next();
+const d2=document.getElementById("d2"),z2=document.getElementById("z2");
+classify.forEach(o=>{
+  const d=document.createElement("div");
+  d.textContent=o.w;d.className="draggable";
+  d.onclick=()=>{
+    s2++;document.getElementById("s2").textContent="Score: "+s2;
+    speak("Correct");
+  };
+  d2.appendChild(d);
+});
+types.forEach(t=>{
+  const z=document.createElement("div");
+  z.textContent=t;z.className="dropzone";
+  z2.appendChild(z);
+});
 
-/* ===== Game4 ===== */
-let g4score=0;
-const g4qs=[
- ["It is a ___ dog.","big"],
- ["The room is ___ .","clean"]
+/* ---------- Game3 ---------- */
+let s3=0,idx3=-1;
+const sent3Data=[
+"The happy boy is kind.",
+"A clean place is safe.",
+"The dog is big and friendly.",
+"She feels tired but proud.",
+"It is a difficult test."
 ];
-function g4next(){
-  const q=g4qs[Math.floor(Math.random()*g4qs.length)];
-  g4sent.textContent=q[0];
-  g4opts.innerHTML="";
-  [q[1],"run","book"].forEach(o=>{
-    const b=document.createElement("button");
-    b.textContent=o;
-    b.addEventListener("pointerdown",()=>{
-      const ok=o===q[1];
-      speak(ok?"Correct":"Wrong");
-      if(ok){g4score++;g4scoreEl.textContent="Score: "+g4score;}
-      g4next();
-    });
-    g4opts.appendChild(b);
-  });
-}
-const g4scoreEl=document.getElementById("g4score");
-g4next();
-
-/* ===== Game5 ===== */
-let g5score=0,g5idx=0;
-function g5next(){
-  g5idx=Math.floor(Math.random()*adjectives.length);
-  g5word.textContent=adjectives[g5idx].w;
-}
-function g5judge(ok){
-  speak(ok?"Correct":"Wrong");
-  if(ok){g5score++;g5scoreEl.textContent="Score: "+g5score;}
-  g5next();
-}
-const g5scoreEl=document.getElementById("g5score");
-g5yes.addEventListener("pointerdown",()=>g5judge(true));
-g5no.addEventListener("pointerdown",()=>g5judge(false));
-g5next();
-</script>
-
-</body>
-</html>
+function next3(){
+  idx3=(idx3+1)%sent3Data.length;
+  sent3.innerHTML="";
+  sent3Data[idx3].split(" ").forEach(w=>{
+    const sp=document.createElement("span");
+    sp.textContent=w;sp.className="word";
+    sp.onclick=()=>{
+      if(adjectives.includes(w.replace(/[^a-z]/gi,""))){
+        s3++;s3El.textContent="Score: "+s3;speak("Correct");
+      }else{speak("
