@@ -45,6 +45,42 @@ h1{
   border-radius:8px;
 }
 
+/* ===== Mini Dictionary UI ===== */
+.card{
+  margin-top:20px;
+  background:#ffffff;
+  padding:16px;
+  border-radius:18px;
+  box-shadow:0 6px 14px rgba(0,0,0,.15);
+}
+
+.label{
+  font-size:13px;
+  color:#666;
+  margin-top:10px;
+}
+
+.text{
+  font-size:18px;
+  margin-top:4px;
+}
+
+.hiragana{
+  font-size:18px;
+  margin-top:4px;
+  cursor:pointer;
+  color:#333;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  font-size:16px;
+  border-radius:12px;
+  border:1px solid #ccc;
+  margin-top:6px;
+}
+
 .controls{
   text-align:center;
   margin-top:18px;
@@ -77,44 +113,31 @@ button:active{
 <h1>📖 Story 1</h1>
 <div class="sub">The Little Demon Hunter</div>
 
-<div class="story" id="story">
+<div class="story">
+  <div class="sentence" onclick="speak(this)">Long ago, in a quiet village, there lived a small and kind child.</div>
+  <div class="sentence" onclick="speak(this)">The village was peaceful, and people felt safe every day.</div>
+  <div class="sentence" onclick="speak(this)">But deep inside the dark forest, something evil was waking up.</div>
+  <div class="sentence" onclick="speak(this)">One night, the moon glowed bright red in the sky.</div>
+  <div class="sentence" onclick="speak(this)">A tiny demon appeared near the village gate.</div>
+  <div class="sentence" onclick="speak(this)">The demon was weak, but it frightened everyone.</div>
+  <div class="sentence" onclick="speak(this)">The child felt scared, but did not run away.</div>
+  <div class="sentence" onclick="speak(this)">With a brave heart and shaking hands, the child took one step forward.</div>
+  <div class="sentence" onclick="speak(this)">That was the moment the long journey began.</div>
+</div>
 
-  <div class="sentence" onclick="speak(this)">
-    Long ago, in a quiet village, there lived a small and kind child.
-  </div>
+<!-- 🔤 Mini English Reader -->
+<div class="card">
+  <div class="label">🔤 Word Checker</div>
+  <input id="miniEng" placeholder="Type one English word…" oninput="miniProcess()">
 
-  <div class="sentence" onclick="speak(this)">
-    The village was peaceful, and people felt safe every day.
-  </div>
+  <div class="label">Japanese</div>
+  <div class="text" id="miniJP">—</div>
 
-  <div class="sentence" onclick="speak(this)">
-    But deep inside the dark forest, something evil was waking up.
-  </div>
+  <div class="label">Reading (Hiragana)</div>
+  <div class="hiragana" id="miniHira" onclick="miniSpeakHira()">—</div>
 
-  <div class="sentence" onclick="speak(this)">
-    One night, the moon glowed bright red in the sky.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    A tiny demon appeared near the village gate.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    The demon was weak, but it frightened everyone.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    The child felt scared, but did not run away.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    With a brave heart and shaking hands, the child took one step forward.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    That was the moment the long journey began.
-  </div>
-
+  <button onclick="miniSpeakEN()">🔊 English</button>
+  <button onclick="miniSpeakJP()">🔊 日本語</button>
 </div>
 
 <div class="controls">
@@ -126,17 +149,8 @@ button:active{
 function createVoice(text){
   const msg = new SpeechSynthesisUtterance(text);
   msg.lang = "en-US";
-  msg.rate = 0.6;    // ← さらにゆっくり
-  msg.pitch = 1.4;  // かわいく
-  msg.volume = 1.0;
-
-  const voices = speechSynthesis.getVoices();
-  const soft = voices.find(v =>
-    v.lang.startsWith("en") &&
-    (v.name.includes("Female") || v.name.includes("Samantha"))
-  );
-
-  if(soft) msg.voice = soft;
+  msg.rate = 0.6;
+  msg.pitch = 1.4;
   return msg;
 }
 
@@ -147,12 +161,55 @@ function speak(el){
 
 function readAll(){
   speechSynthesis.cancel();
-  const sentences = document.querySelectorAll(".sentence");
-  sentences.forEach((s,i)=>{
-    const msg = createVoice(s.innerText);
-    msg.startTime = i * 10;
-    speechSynthesis.speak(msg);
+  document.querySelectorAll(".sentence").forEach(s=>{
+    speechSynthesis.speak(createVoice(s.innerText));
   });
+}
+
+/* ===== Mini Dictionary（Story1〜10 共通） ===== */
+const miniDictionary = {
+  child:{jp:"子ども", hira:"こども"},
+  village:{jp:"村", hira:"むら"},
+  forest:{jp:"森", hira:"もり"},
+  demon:{jp:"悪魔", hira:"あくま"},
+  brave:{jp:"勇敢な", hira:"ゆうかんな"},
+  heart:{jp:"心", hira:"こころ"},
+  journey:{jp:"旅", hira:"たび"},
+  fear:{jp:"恐れ", hira:"おそれ"},
+  light:{jp:"光", hira:"ひかり"},
+  darkness:{jp:"闇", hira:"やみ"}
+};
+
+function miniProcess(){
+  const eng = miniEng.value.toLowerCase().trim();
+  if(miniDictionary[eng]){
+    miniJP.innerText = miniDictionary[eng].jp;
+    miniHira.innerText = miniDictionary[eng].hira;
+  }else{
+    miniJP.innerText = "—";
+    miniHira.innerText = "—";
+  }
+}
+
+function miniSpeakEN(){
+  if(!miniEng.value) return;
+  speechSynthesis.speak(new SpeechSynthesisUtterance(miniEng.value));
+}
+
+function miniSpeakJP(){
+  if(miniJP.innerText==="—") return;
+  const u = new SpeechSynthesisUtterance(miniJP.innerText);
+  u.lang="ja-JP";
+  u.rate=0.6;
+  speechSynthesis.speak(u);
+}
+
+function miniSpeakHira(){
+  if(miniHira.innerText==="—") return;
+  const u = new SpeechSynthesisUtterance(miniHira.innerText);
+  u.lang="ja-JP";
+  u.rate=0.5;
+  speechSynthesis.speak(u);
 }
 </script>
 
