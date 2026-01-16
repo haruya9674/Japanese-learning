@@ -9,22 +9,14 @@
 body{
   font-family:system-ui,sans-serif;
   padding:20px;
+  padding-bottom:160px;
   background:linear-gradient(180deg,#fff6fb,#f0fbff);
   max-width:620px;
   margin:auto;
 }
 
-h1{
-  text-align:center;
-  margin-bottom:6px;
-}
-
-.sub{
-  text-align:center;
-  font-size:14px;
-  color:#666;
-  margin-bottom:20px;
-}
+h1{text-align:center;margin-bottom:6px;}
+.sub{text-align:center;font-size:14px;color:#666;margin-bottom:20px;}
 
 .story{
   background:white;
@@ -32,22 +24,42 @@ h1{
   border-radius:18px;
   box-shadow:0 6px 14px rgba(0,0,0,.15);
   font-size:18px;
-  line-height:1.7;
+  line-height:1.8;
 }
 
-.sentence{
-  margin-bottom:10px;
+.word{
   cursor:pointer;
+  border-radius:6px;
+}
+.word:active{
+  background:#ffe4f1;
 }
 
-.sentence:active{
-  background:#fff0f6;
-  border-radius:8px;
+/* ===== Dictionary ===== */
+.card{
+  margin-top:20px;
+  background:#ffffff;
+  padding:16px;
+  border-radius:18px;
+  box-shadow:0 6px 14px rgba(0,0,0,.15);
+}
+
+.label{font-size:13px;color:#666;margin-top:10px;}
+.text,.hiragana{font-size:18px;margin-top:4px;}
+.hiragana{cursor:pointer;}
+
+input{
+  width:100%;
+  padding:10px;
+  font-size:16px;
+  border-radius:12px;
+  border:1px solid #ccc;
+  margin-top:6px;
 }
 
 .controls{
   text-align:center;
-  margin-top:18px;
+  margin-top:20px;
 }
 
 button,a{
@@ -61,11 +73,6 @@ button,a{
   text-decoration:none;
   color:#333;
   box-shadow:0 4px 10px rgba(0,0,0,.2);
-  cursor:pointer;
-}
-
-button:active{
-  transform:scale(0.96);
 }
 </style>
 </head>
@@ -78,85 +85,160 @@ button:active{
 <div class="sub">The Trial of Shadows</div>
 
 <div class="story" id="story">
-
-  <div class="sentence" onclick="speak(this)">
-    The hidden path ended in a silent, empty field.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    Dark shadows slowly rose from the ground.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    They looked like memories shaped by fear.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    The guardian stepped back and spoke softly.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    “This is a trial only you can face.”
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    The child’s heart beat fast, but their feet did not move.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    Holding the glowing stone, the child faced the shadows.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    The light pushed back the darkness little by little.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    The shadows faded, leaving calm silence behind.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    The child had passed the trial.
-  </div>
-
+The hidden path ended in a silent empty field.
+Dark shadows slowly rose from the ground.
+They looked like memories shaped by fear.
+The guardian stepped back and spoke softly.
+This is a trial only you can face.
+The child's heart beat fast but their feet did not move.
+Holding the glowing stone the child faced the shadows.
+The light pushed back the darkness little by little.
+The shadows faded leaving calm silence behind.
+The child had passed the trial.
 </div>
 
 <div class="controls">
   <button onclick="readAll()">🔊 Read All</button>
+  <a href="story8.html">← Previous Story</a>
   <a href="story10.html">Next Story →</a>
 </div>
 
+<div class="card">
+  <div class="label">🔤 Word Checker</div>
+  <input id="miniEng" placeholder="Tap a word or type…" oninput="miniProcess()">
+
+  <div class="label">Japanese</div>
+  <div class="text" id="miniJP">—</div>
+
+  <div class="label">Reading (Hiragana)</div>
+  <div class="hiragana" id="miniHira" onclick="speakJP(miniHira.innerText)">—</div>
+
+  <button onclick="speakEN()">🔊 English</button>
+  <button onclick="speakJP(miniJP.innerText)">🔊 日本語</button>
+</div>
+
 <script>
-function createVoice(text){
-  const msg = new SpeechSynthesisUtterance(text);
-  msg.lang = "en-US";
-  msg.rate = 0.6;
-  msg.pitch = 1.4;
-  msg.volume = 1.0;
+/* ===== Dictionary (Story9 全単語対応) ===== */
+const dict={
+the:{jp:"その",hira:"その"},
+hidden:{jp:"隠された",hira:"かくされた"},
+path:{jp:"道",hira:"みち"},
+ended:{jp:"終わった",hira:"おわった"},
+in:{jp:"〜の中で",hira:"なかで"},
+a:{jp:"一つの",hira:"ひとつの"},
+silent:{jp:"静かな",hira:"しずかな"},
+empty:{jp:"空の",hira:"からの"},
+field:{jp:"野原",hira:"のはら"},
+dark:{jp:"暗い",hira:"くらい"},
+shadows:{jp:"影",hira:"かげ"},
+slowly:{jp:"ゆっくり",hira:"ゆっくり"},
+rose:{jp:"現れた",hira:"あらわれた"},
+from:{jp:"〜から",hira:"から"},
+ground:{jp:"地面",hira:"じめん"},
+they:{jp:"それらは",hira:"それらは"},
+looked:{jp:"見えた",hira:"みえた"},
+like:{jp:"〜のような",hira:"のような"},
+memories:{jp:"記憶",hira:"きおく"},
+shaped:{jp:"形作られた",hira:"かたちづくられた"},
+by:{jp:"〜によって",hira:"によって"},
+fear:{jp:"恐れ",hira:"おそれ"},
+guardian:{jp:"守護者",hira:"しゅごしゃ"},
+stepped:{jp:"下がった",hira:"さがった"},
+back:{jp:"後ろへ",hira:"うしろへ"},
+and:{jp:"そして",hira:"そして"},
+spoke:{jp:"話した",hira:"はなした"},
+softly:{jp:"やさしく",hira:"やさしく"},
+this:{jp:"これは",hira:"これは"},
+is:{jp:"〜である",hira:"である"},
+trial:{jp:"試練",hira:"しれん"},
+only:{jp:"ただ〜だけ",hira:"だけ"},
+you:{jp:"あなた",hira:"あなた"},
+can:{jp:"できる",hira:"できる"},
+face:{jp:"立ち向かう",hira:"たちむかう"},
+child:{jp:"子ども",hira:"こども"},
+heart:{jp:"心",hira:"こころ"},
+beat:{jp:"鼓動した",hira:"こどうした"},
+fast:{jp:"速く",hira:"はやく"},
+but:{jp:"しかし",hira:"しかし"},
+their:{jp:"彼らの",hira:"かれらの"},
+feet:{jp:"足",hira:"あし"},
+did:{jp:"〜しなかった",hira:"しなかった"},
+not:{jp:"ない",hira:"ない"},
+move:{jp:"動く",hira:"うごく"},
+holding:{jp:"持ちながら",hira:"もちながら"},
+glowing:{jp:"光る",hira:"ひかる"},
+stone:{jp:"石",hira:"いし"},
+faced:{jp:"向き合った",hira:"むきあった"},
+light:{jp:"光",hira:"ひかり"},
+pushed:{jp:"押し返した",hira:"おしかえした"},
+darkness:{jp:"闇",hira:"やみ"},
+little:{jp:"少し",hira:"すこし"},
+leaving:{jp:"残して",hira:"のこして"},
+calm:{jp:"穏やかな",hira:"おだやかな"},
+silence:{jp:"静けさ",hira:"しずけさ"},
+behind:{jp:"後に",hira:"あとに"},
+had:{jp:"〜した",hira:"した"},
+passed:{jp:"乗り越えた",hira:"のりこえた"}
+};
 
-  const voices = speechSynthesis.getVoices();
-  const soft = voices.find(v =>
-    v.lang.startsWith("en") &&
-    (v.name.includes("Female") || v.name.includes("Samantha"))
-  );
+/* ===== Word Tap ===== */
+const storyEl=document.getElementById("story");
+const originalText=storyEl.innerText;
 
-  if(soft) msg.voice = soft;
-  return msg;
+storyEl.innerHTML=originalText.split(/(\s+)/).map(w=>{
+  if(/\s+/.test(w)) return w;
+  const clean=w.toLowerCase().replace(/[^a-z]/g,"");
+  return `<span class="word" onclick="selectWord('${clean}')">${w}</span>`;
+}).join("");
+
+function selectWord(w){
+  miniEng.value=w;
+  miniProcess();
+  speakEN();
 }
 
-function speak(el){
+/* ===== Dictionary ===== */
+function miniProcess(){
+  const w=miniEng.value.toLowerCase().trim();
+  if(dict[w]){
+    miniJP.innerText=dict[w].jp;
+    miniHira.innerText=dict[w].hira;
+  }else{
+    miniJP.innerText="—";
+    miniHira.innerText="—";
+  }
+}
+
+/* ===== Speech ===== */
+function gentleEN(text){
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="en-US";
+  u.rate=0.5;
+  u.pitch=1.3;
+  const v=speechSynthesis.getVoices().find(v=>v.lang.startsWith("en")&&v.name.includes("Female"));
+  if(v) u.voice=v;
+  return u;
+}
+
+function speakEN(){
+  if(!miniEng.value) return;
   speechSynthesis.cancel();
-  speechSynthesis.speak(createVoice(el.innerText));
+  speechSynthesis.speak(gentleEN(miniEng.value));
+}
+
+function speakJP(t){
+  if(t==="—") return;
+  const u=new SpeechSynthesisUtterance(t);
+  u.lang="ja-JP";
+  u.rate=0.5;
+  u.pitch=1.2;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
 }
 
 function readAll(){
   speechSynthesis.cancel();
-  const sentences = document.querySelectorAll(".sentence");
-  sentences.forEach((s,i)=>{
-    const msg = createVoice(s.innerText);
-    msg.startTime = i * 10;
-    speechSynthesis.speak(msg);
-  });
+  speechSynthesis.speak(gentleEN(originalText));
 }
 </script>
 
