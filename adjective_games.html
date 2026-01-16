@@ -4,12 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Adjective Games</title>
-
 <style>
-body{font-family:system-ui,sans-serif;background:#f0f8ff;padding:16px}
+body{font-family:system-ui;background:#f0f8ff;padding:16px}
 h1{text-align:center}
 .tabs{display:flex;flex-wrap:wrap;margin-bottom:14px}
-.tab{flex:1;min-width:100px;margin:4px;padding:10px;background:#ddd;text-align:center;border-radius:8px}
+.tab{flex:1;min-width:90px;margin:4px;padding:10px;background:#ddd;text-align:center;border-radius:8px}
 .tab.active{background:#87ceeb;font-weight:bold}
 .game{display:none}
 .game.active{display:block}
@@ -19,12 +18,13 @@ button{padding:10px 16px;font-size:16px;margin:6px;border-radius:8px}
 .correct{color:green}
 .wrong{color:red}
 .score{font-weight:bold;margin-top:8px}
-.word{display:inline-block;padding:6px 8px;margin:4px;border:1px solid #ccc;border-radius:6px}
+.word{display:inline-block;padding:6px 8px;margin:4px;border:1px solid #aaa;border-radius:6px}
+.word.correct{background:#c8f7c5}
+.word.wrong{background:#f7c5c5}
 </style>
 </head>
 
 <body>
-
 <h1>Adjective Games</h1>
 
 <div class="tabs">
@@ -71,6 +71,8 @@ button{padding:10px 16px;font-size:16px;margin:6px;border-radius:8px}
 
 <script>
 /* ===== Utility ===== */
+let timers=[];
+function clearAllTimers(){timers.forEach(t=>clearTimeout(t));timers=[]}
 function speak(t){
   try{
     speechSynthesis.cancel();
@@ -81,38 +83,30 @@ function speak(t){
 }
 function rand(a){return a[Math.floor(Math.random()*a.length)]}
 
-/* ===== Word Data (120+) ===== */
-const adjectives=[
-"big","small","happy","sad","clean","dirty","fast","slow","hot","cold",
-"easy","hard","safe","dangerous","strong","weak","kind","polite",
-"healthy","tired","hungry","interesting","boring","bright","dark",
-"quiet","loud","careful","ready","heavy","light","cheap","expensive",
-"early","late","busy","free","friendly","angry","proud","brave",
-"simple","modern","popular","useful","important","special","correct","wrong",
-"fresh","dry","wet","full","empty","soft","hardworking"
-];
+/* ===== Words ===== */
+const adjectives=[ "big","small","happy","sad","clean","dirty","fast","slow","hot","cold",
+"easy","hard","safe","dangerous","strong","weak","kind","healthy","tired","hungry",
+"interesting","boring","bright","dark","quiet","loud","careful","ready","heavy","light",
+"cheap","expensive","early","late","busy","free","friendly","angry","brave","simple",
+"popular","useful","important","special","correct","fresh","dry","wet","full","empty",
+"soft","beautiful","tall","short","fun","delicious","crowded","hardworking" ];
 
-const nonAdj=[
-"run","eat","drink","jump","sleep","book","pen","dog","cat","apple",
-"school","teacher","student","quickly","slowly","today","tomorrow",
-"and","but","because","he","she","they","play","watch","listen","go",
-"come","make","take","give","have","read","write","sing","draw",
-"under","over","before","after","near","far","very","really","too"
-];
+const nonAdj=[ "run","eat","drink","jump","sleep","book","pen","dog","cat","apple","school",
+"teacher","student","quickly","slowly","today","tomorrow","and","but","because","he","she",
+"they","play","watch","listen","go","come","make","take","give","have","read","write",
+"under","over","before","after","near","far","very","really","too" ];
 
-const pool=[
-...adjectives.map(w=>({w,a:true})),
-...nonAdj.map(w=>({w,a:false}))
-];
+const pool=[...adjectives.map(w=>({w,a:true})),...nonAdj.map(w=>({w,a:false}))];
 
 /* ===== Tabs ===== */
 document.querySelectorAll(".tab").forEach(t=>{
   t.onclick=()=>{
+    clearAllTimers();
     document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
     document.querySelectorAll(".game").forEach(x=>x.classList.remove("active"));
     t.classList.add("active");
     document.getElementById(t.dataset.game).classList.add("active");
-  };
+  }
 });
 
 /* ===== Game1 ===== */
@@ -127,44 +121,46 @@ function judge1(a){
   f1.textContent=ok?"Correct":"Wrong";
   f1.className="feedback "+(ok?"correct":"wrong");
   speak(ok?"Correct":"Wrong");
-  if(ok){s1++;s1el.textContent="Score: "+s1;}
-  setTimeout(next1,600);
+  if(ok){s1++;s1el.textContent="Score: "+s1}
+  timers.push(setTimeout(next1,600));
 }
-const w1=document.getElementById("w1"),
+const w1=w1=document.getElementById("w1"),
 f1=document.getElementById("f1"),
 s1el=document.getElementById("s1");
 g1y.onclick=()=>judge1(true);
 g1n.onclick=()=>judge1(false);
 next1();
 
-/* ===== Game2 (45 words) ===== */
+/* ===== Game2 ===== */
 let s2=0;
-const g2w=document.getElementById("g2words");
-pool.slice(0,45).forEach(o=>{
+const g2w=document.getElementById("g2words"),s2el=document.getElementById("s2");
+g2w.innerHTML="";
+pool.slice(0,60).forEach(o=>{
   const sp=document.createElement("span");
   sp.textContent=o.w;
   sp.className="word";
   sp.onclick=()=>{
-    if(o.a){s2++;s2el.textContent="Score: "+s2;speak("Correct")}
-    else{speak("Wrong")}
+    if(sp.classList.contains("correct")||sp.classList.contains("wrong"))return;
+    if(o.a){sp.classList.add("correct");s2++;s2el.textContent="Score: "+s2;speak("Correct")}
+    else{sp.classList.add("wrong");speak("Wrong")}
   };
   g2w.appendChild(sp);
 });
-const s2el=document.getElementById("s2");
 
-/* ===== Game3 (30 sentences) ===== */
+/* ===== Game3 ===== */
 let s3=0,last3="";
 const sentences=[
 "The happy boy is kind","A clean room is safe","The dog is friendly",
 "The test is difficult","She feels tired today","The food is delicious",
 "It is a hot day","The class is quiet","The box is heavy","The story is interesting",
-"The girl is polite","This place is crowded","The road is dangerous","The water is cold",
-"The movie is boring","He is proud of his work","The bag is light","The room is dark",
-"The lesson is easy","The cat is small","The bus is late","The park is beautiful",
-"The work is important","The question is simple","The shoes are cheap",
-"The building is tall","The student is hardworking","The weather is fresh",
-"The answer is correct","The game is fun"
+"The girl is polite","This place is crowded","The road is dangerous",
+"The water is cold","The movie is boring","He is proud of his work",
+"The bag is light","The room is dark","The lesson is easy","The cat is small",
+"The bus is late","The park is beautiful","The work is important",
+"The question is simple","The shoes are cheap","The building is tall",
+"The student is hardworking","The weather is fresh","The answer is correct","The game is fun"
 ];
+const g3sent=document.getElementById("g3sent"),s3el=document.getElementById("s3");
 function next3(){
   let s;
   do{s=rand(sentences)}while(s===last3);
@@ -175,23 +171,24 @@ function next3(){
     sp.textContent=w;
     sp.className="word";
     sp.onclick=()=>{
-      if(adjectives.includes(w.toLowerCase())){
-        s3++;s3el.textContent="Score: "+s3;speak("Correct");
-      }else{speak("Wrong")}
+      if(adjectives.includes(w.toLowerCase())){s3++;s3el.textContent="Score: "+s3;speak("Correct")}
+      else{speak("Wrong")}
+      timers.push(setTimeout(next3,600));
     };
     g3sent.appendChild(sp);
   });
 }
-const g3sent=document.getElementById("g3sent"),
-s3el=document.getElementById("s3");
 next3();
 
-/* ===== Game4 (30 questions) ===== */
+/* ===== Game4 ===== */
 let s4=0;
 const fills=sentences.map(s=>{
   const a=s.split(" ").find(w=>adjectives.includes(w.toLowerCase()));
-  return {q:s.replace(a,"___"),a};
+  return{q:s.replace(a,"___"),a};
 });
+const g4sent=document.getElementById("g4sent"),
+g4opt=document.getElementById("g4opt"),
+s4el=document.getElementById("s4");
 function next4(){
   const f=rand(fills);
   g4sent.textContent=f.q;
@@ -202,46 +199,42 @@ function next4(){
     b.onclick=()=>{
       if(o===f.a){s4++;s4el.textContent="Score: "+s4;speak("Correct")}
       else{speak("Wrong")}
-      setTimeout(next4,600);
+      timers.push(setTimeout(next4,600));
     };
     g4opt.appendChild(b);
   });
 }
-const g4sent=document.getElementById("g4sent"),
-g4opt=document.getElementById("g4opt"),
-s4el=document.getElementById("s4");
 next4();
 
 /* ===== Game5 (Speed) ===== */
-let s5=0,c5,t5;
+let s5=0,c5;
+const w5=document.getElementById("w5"),
+f5=document.getElementById("f5"),
+s5el=document.getElementById("s5");
 function next5(){
-  clearTimeout(t5);
+  clearAllTimers();
   c5=rand(pool);
   w5.textContent=c5.w;
   f5.textContent="";
-  t5=setTimeout(()=>{
+  timers.push(setTimeout(()=>{
     f5.textContent="Time up";
     f5.className="feedback wrong";
     speak("Time up");
-    setTimeout(next5,600);
-  },3000);
+    timers.push(setTimeout(next5,600));
+  },3000));
 }
 function judge5(a){
-  clearTimeout(t5);
+  clearAllTimers();
   const ok=a===c5.a;
   f5.textContent=ok?"Correct":"Wrong";
   f5.className="feedback "+(ok?"correct":"wrong");
   speak(ok?"Correct":"Wrong");
-  if(ok){s5++;s5el.textContent="Score: "+s5;}
-  setTimeout(next5,600);
+  if(ok){s5++;s5el.textContent="Score: "+s5}
+  timers.push(setTimeout(next5,600));
 }
-const w5=document.getElementById("w5"),
-f5=document.getElementById("f5"),
-s5el=document.getElementById("s5");
 g5y.onclick=()=>judge5(true);
 g5n.onclick=()=>judge5(false);
 next5();
 </script>
-
 </body>
 </html>
