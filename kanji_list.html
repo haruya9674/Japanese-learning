@@ -13,6 +13,7 @@ body{
 }
 
 h1{text-align:center;}
+
 a{
   display:inline-block;
   margin-bottom:14px;
@@ -40,6 +41,16 @@ th,td{
 th{
   background:#fff;
 }
+
+/* 🔊 Reading クリック用 */
+.reading{
+  cursor:pointer;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.reading:active{
+  background:#f0f8ff;
+}
 </style>
 </head>
 
@@ -51,34 +62,54 @@ th{
 
 <table>
 <tr><th>English</th><th>Kanji</th><th>Reading</th></tr>
-<tr><td>Monday</td><td>月曜日</td><td>げつようび</td></tr>
-<tr><td>Tuesday</td><td>火曜日</td><td>かようび</td></tr>
-<tr><td>Wednesday</td><td>水曜日</td><td>すいようび</td></tr>
-<tr><td>Thursday</td><td>木曜日</td><td>もくようび</td></tr>
-<tr><td>Friday</td><td>金曜日</td><td>きんようび</td></tr>
-<tr><td>Saturday</td><td>土曜日</td><td>どようび</td></tr>
-<tr><td>Sunday</td><td>日曜日</td><td>にちようび</td></tr>
 
-<tr><td>mountain</td><td>山</td><td>やま</td></tr>
-<tr><td>river</td><td>川</td><td>かわ</td></tr>
-<tr><td>forest</td><td>森</td><td>もり</td></tr>
-<tr><td>tree</td><td>木</td><td>き</td></tr>
+<tr><td>Monday</td><td>月曜日</td><td class="reading">げつようび</td></tr>
+<tr><td>Tuesday</td><td>火曜日</td><td class="reading">かようび</td></tr>
+<tr><td>Wednesday</td><td>水曜日</td><td class="reading">すいようび</td></tr>
+<tr><td>Thursday</td><td>木曜日</td><td class="reading">もくようび</td></tr>
+<tr><td>Friday</td><td>金曜日</td><td class="reading">きんようび</td></tr>
+<tr><td>Saturday</td><td>土曜日</td><td class="reading">どようび</td></tr>
+<tr><td>Sunday</td><td>日曜日</td><td class="reading">にちようび</td></tr>
 
-<tr><td>fire</td><td>火</td><td>ひ</td></tr>
-<tr><td>water</td><td>水</td><td>みず</td></tr>
-<tr><td>gold</td><td>金</td><td>きん</td></tr>
-<tr><td>earth</td><td>地球</td><td>ちきゅう</td></tr>
+<tr><td>mountain</td><td>山</td><td class="reading">やま</td></tr>
+<tr><td>river</td><td>川</td><td class="reading">かわ</td></tr>
+<tr><td>forest</td><td>森</td><td class="reading">もり</td></tr>
+<tr><td>tree</td><td>木</td><td class="reading">き</td></tr>
 
-<tr><td>big</td><td>大</td><td>だい</td></tr>
-<tr><td>small</td><td>小</td><td>しょう</td></tr>
-<tr><td>up</td><td>上</td><td>うえ</td></tr>
-<tr><td>down</td><td>下</td><td>した</td></tr>
+<tr><td>fire</td><td>火</td><td class="reading">ひ</td></tr>
+<tr><td>water</td><td>水</td><td class="reading">みず</td></tr>
+<tr><td>gold</td><td>金</td><td class="reading">きん</td></tr>
+<tr><td>earth</td><td>地球</td><td class="reading">ちきゅう</td></tr>
 
-<tr><td>person</td><td>人</td><td>ひと</td></tr>
-<tr><td>child</td><td>子</td><td>こ</td></tr>
-<tr><td>woman</td><td>女</td><td>おんな</td></tr>
-<tr><td>man</td><td>男</td><td>おとこ</td></tr>
+<tr><td>big</td><td>大</td><td class="reading">だい</td></tr>
+<tr><td>small</td><td>小</td><td class="reading">しょう</td></tr>
+<tr><td>up</td><td>上</td><td class="reading">うえ</td></tr>
+<tr><td>down</td><td>下</td><td class="reading">した</td></tr>
+
+<tr><td>person</td><td>人</td><td class="reading">ひと</td></tr>
+<tr><td>child</td><td>子</td><td class="reading">こ</td></tr>
+<tr><td>woman</td><td>女</td><td class="reading">おんな</td></tr>
+<tr><td>man</td><td>男</td><td class="reading">おとこ</td></tr>
 </table>
+
+<script>
+/* ===== 日本語ゆっくり読み上げ ===== */
+function speak(text){
+  if(!("speechSynthesis" in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "ja-JP";
+  u.rate = 0.7;   // ゆっくり
+  u.pitch = 1.0;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+}
+
+document.querySelectorAll(".reading").forEach(td=>{
+  td.addEventListener("click", ()=>{
+    speak(td.textContent);
+  });
+});
+</script>
 
 </body>
 </html>
