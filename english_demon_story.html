@@ -2,161 +2,112 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>📖 The Young Demon Hunters</title>
+<title>Story 1 – The Little Demon Hunter</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
-  font-family:system-ui, sans-serif;
-  background:linear-gradient(180deg,#0f2027,#203a43,#2c5364);
+  font-family:system-ui,sans-serif;
   padding:20px;
-  text-align:center;
-  color:white;
+  background:linear-gradient(180deg,#fff6fb,#f0fbff);
+  max-width:600px;
+  margin:auto;
 }
 
 h1{
-  font-size:26px;
+  text-align:center;
   margin-bottom:6px;
 }
 
 .sub{
+  text-align:center;
   font-size:14px;
-  opacity:.85;
+  color:#666;
   margin-bottom:20px;
 }
 
 .story{
-  max-width:460px;
-  margin:auto;
-  background:#ffffff;
-  color:#222;
+  background:white;
+  padding:18px;
   border-radius:18px;
-  padding:20px;
-  box-shadow:0 6px 14px rgba(0,0,0,.35);
-}
-
-.sentence{
-  font-size:19px;
-  margin:12px 0;
-  cursor:pointer;
+  box-shadow:0 6px 14px rgba(0,0,0,.15);
+  font-size:18px;
   line-height:1.6;
-  user-select:none;
-  -webkit-user-select:none;
-  padding:4px 6px;
-  border-radius:8px;
 }
 
-.sentence:active{
-  background:#eef4ff;
+.controls{
+  text-align:center;
+  margin-top:16px;
 }
 
-button{
-  margin-top:18px;
-  padding:12px 24px;
-  font-size:16px;
+button,a{
+  display:inline-block;
+  margin:6px;
+  padding:12px 18px;
   border:none;
-  border-radius:16px;
-  background:#ff6f61;
-  color:white;
-  box-shadow:0 4px 10px rgba(0,0,0,.3);
+  border-radius:14px;
+  font-size:16px;
+  background:white;
+  text-decoration:none;
+  color:#333;
+  box-shadow:0 4px 10px rgba(0,0,0,.2);
+  cursor:pointer;
 }
 
-.back{
-  display:block;
-  margin-top:18px;
-  text-decoration:none;
-  color:white;
-  opacity:.9;
+button:active{
+  transform:scale(0.96);
 }
 </style>
 </head>
 
 <body>
 
-<h1>⚔️ The Young Demon Hunters</h1>
-<div class="sub">Tap a sentence to listen slowly</div>
+<a href="index.html">← Back to Menu</a>
 
-<div class="story">
+<h1>📖 Story 1</h1>
+<div class="sub">The Little Demon Hunter</div>
 
-  <div class="sentence">Long ago, demons lived in the dark shadows of the world.</div>
-  <div class="sentence">They were not very strong, but they scared people at night.</div>
+<div class="story" id="storyText">
+Long ago, in a quiet village, there lived a small and kind child.
+The village was peaceful, but deep in the forest, dark demons were waking up.
 
-  <div class="sentence">In a small town, there lived two children.</div>
-  <div class="sentence">Their names were Leo and Mia.</div>
-  <div class="sentence">They looked like normal kids.</div>
-  <div class="sentence">But they had a secret.</div>
+One night, the moon glowed bright red.
+A tiny demon appeared near the village gate.
+It was weak, but it scared everyone.
 
-  <div class="sentence">Leo and Mia were demon hunters.</div>
-  <div class="sentence">They learned from an old teacher.</div>
-  <div class="sentence">The teacher taught them to be brave and kind.</div>
+The child was afraid, but did not run away.
+With a brave heart and shaking hands, the child took one step forward.
 
-  <div class="sentence">One quiet night, the sky turned dark red.</div>
-  <div class="sentence">The wind stopped.</div>
-  <div class="sentence">Leo felt something was wrong.</div>
-
-  <div class="sentence">A small demon appeared near the forest.</div>
-  <div class="sentence">It was scared and angry.</div>
-  <div class="sentence">The demon was lost.</div>
-
-  <div class="sentence">Mia held her light sword.</div>
-  <div class="sentence">Leo held his shield.</div>
-  <div class="sentence">They did not run.</div>
-
-  <div class="sentence">“We protect people,” Leo said.</div>
-  <div class="sentence">“But we do not hurt without reason,” Mia said.</div>
-
-  <div class="sentence">The demon cried.</div>
-  <div class="sentence">It missed its home.</div>
-
-  <div class="sentence">Mia spoke softly.</div>
-  <div class="sentence">She showed the demon the path back.</div>
-
-  <div class="sentence">The red sky slowly became blue again.</div>
-  <div class="sentence">The wind returned.</div>
-
-  <div class="sentence">The town was safe.</div>
-  <div class="sentence">Leo and Mia smiled.</div>
-
-  <div class="sentence">They were young.</div>
-  <div class="sentence">They were brave.</div>
-  <div class="sentence">They were demon hunters.</div>
-
+That was the moment the journey began.
 </div>
 
-<button onclick="readAll()">▶ Read the Whole Story</button>
-
-<a href="index.html" class="back">← Back to Menu</a>
+<div class="controls">
+  <button onclick="speakEnglish()">🔊 Read Aloud</button>
+  <a href="story2.html">Next Story →</a>
+</div>
 
 <script>
-function speak(text){
-  if(!("speechSynthesis" in window)) return;
+function speakEnglish(){
+  const text = document.getElementById("storyText").innerText;
+  const msg = new SpeechSynthesisUtterance(text);
 
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "en-US";
-  u.rate = 0.6;   // ゆっくり
-  u.pitch = 1.0; // やさしい
-  u.volume = 1.0;
+  msg.lang = "en-US";
+  msg.rate = 0.75;      // ゆっくり
+  msg.pitch = 1.4;     // かわいく
+  msg.volume = 1.0;
+
+  const voices = speechSynthesis.getVoices();
+  const softVoice = voices.find(v =>
+    v.lang.startsWith("en") &&
+    (v.name.includes("Female") || v.name.includes("Samantha"))
+  );
+
+  if(softVoice){
+    msg.voice = softVoice;
+  }
 
   speechSynthesis.cancel();
-  speechSynthesis.speak(u);
-}
-
-document.querySelectorAll(".sentence").forEach(el=>{
-  el.addEventListener("click", ()=>{
-    speak(el.textContent);
-  });
-});
-
-function readAll(){
-  speechSynthesis.cancel();
-  document.querySelectorAll(".sentence").forEach(el=>{
-    const u = new SpeechSynthesisUtterance(el.textContent);
-    u.lang = "en-US";
-    u.rate = 0.6;
-    u.pitch = 1.0;
-    u.volume = 1.0;
-    speechSynthesis.speak(u);
-  });
+  speechSynthesis.speak(msg);
 }
 </script>
 
