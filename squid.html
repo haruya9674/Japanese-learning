@@ -37,7 +37,6 @@ h1{ font-size:26px; margin-bottom:6px; }
   position:absolute;
   left:0;
   top:45px;
-  transition:left 0.15s linear;
 }
 
 .goal{
@@ -49,30 +48,28 @@ h1{ font-size:26px; margin-bottom:6px; }
   background:#4caf50;
 }
 
-.light{
-  font-size:24px;
-  font-weight:bold;
-  margin:14px 0;
-}
+.light{ font-size:24px; font-weight:bold; margin:14px 0; }
 .green{ color:#2e7d32; }
 .red{ color:#c62828; }
 
 button{
-  padding:14px 22px;
+  padding:16px 26px;
   font-size:16px;
   border:none;
-  border-radius:14px;
+  border-radius:16px;
   margin:6px;
   box-shadow:0 4px 10px rgba(0,0,0,.2);
+  user-select:none;
+  -webkit-user-select:none;
+  touch-action:manipulation;
 }
-
-#tapBtn:active{ transform:scale(0.95); }
 
 .result{
   font-size:20px;
   margin-top:14px;
   min-height:1.5em;
 }
+
 .success{ color:#2e7d32; font-weight:bold; }
 .fail{ color:#c62828; font-weight:bold; }
 
@@ -92,86 +89,85 @@ button{
 
 <div id="light" class="light green">🟢 GREEN LIGHT</div>
 
-<button id="tapBtn">TAP / 進む</button><br>
-<button id="resetBtn">START / RESET</button>
+<button id="tapBtn">PRESS / 押し続ける</button><br>
+<button onclick="resetGame()">START / RESET</button>
 
 <div id="result" class="result"></div>
-
 <a href="index.html" class="back">← BACK</a>
 
 <script>
 let pos = 0;
 let state = "green";
-let timer = null;
 let finished = false;
+let holding = false;
 
+const speed = 2;
 const player = document.getElementById("player");
-const light = document.getElementById("light");
-const result = document.getElementById("result");
-const tapBtn = document.getElementById("tapBtn");
-const resetBtn = document.getElementById("resetBtn");
+const lightEl = document.getElementById("light");
+const resultEl = document.getElementById("result");
+const btn = document.getElementById("tapBtn");
 
+let lightTimer, moveTimer;
+
+// 信号切替
 function startLight(){
-  timer = setInterval(()=>{
+  lightTimer = setInterval(()=>{
     if(finished) return;
     state = Math.random() > 0.5 ? "green" : "red";
-    if(state === "green"){
-      light.textContent = "🟢 GREEN LIGHT";
-      light.className = "light green";
-    }else{
-      light.textContent = "🔴 RED LIGHT";
-      light.className = "light red";
-    }
+    lightEl.textContent = state === "green" ? "🟢 GREEN LIGHT" : "🔴 RED LIGHT";
+    lightEl.className = "light " + state;
   }, 1200);
 }
 
-function move(){
-  if(finished) return;
+// 移動処理
+function startMove(){
+  moveTimer = setInterval(()=>{
+    if(finished) return;
 
-  if(state === "red"){
-    finish(false);
-    return;
-  }
+    if(state === "red" && holding){
+      finish(false);
+      return;
+    }
 
-  pos += 18;
-  player.style.left = pos + "px";
-
-  if(pos >= 250){
-    finish(true);
-  }
+    if(holding && state === "green"){
+      pos += speed;
+      player.style.left = pos + "px";
+      if(pos >= 250) finish(true);
+    }
+  }, 30);
 }
 
 function finish(success){
   finished = true;
-  clearInterval(timer);
-
-  if(success){
-    result.textContent = "🎉 SUCCESS! / 成功";
-    result.className = "result success";
-  }else{
-    result.textContent = "💥 FAILED! / 失敗";
-    result.className = "result fail";
-  }
+  clearInterval(lightTimer);
+  clearInterval(moveTimer);
+  resultEl.textContent = success ? "🎉 SUCCESS / 成功" : "💥 FAILED / 失敗";
+  resultEl.className = "result " + (success ? "success" : "fail");
 }
 
 function resetGame(){
-  clearInterval(timer);
+  clearInterval(lightTimer);
+  clearInterval(moveTimer);
   pos = 0;
   finished = false;
+  holding = false;
   state = "green";
   player.style.left = "0px";
-  result.textContent = "";
-  light.textContent = "🟢 GREEN LIGHT";
-  light.className = "light green";
+  resultEl.textContent = "";
+  lightEl.textContent = "🟢 GREEN LIGHT";
+  lightEl.className = "light green";
   startLight();
+  startMove();
 }
 
-/* 🔑 iOSでも確実に動くイベント登録 */
-tapBtn.addEventListener("click", move);
-resetBtn.addEventListener("click", resetGame);
+// 押す・離す（スマホ＋PC）
+btn.addEventListener("mousedown", ()=> holding = true);
+btn.addEventListener("mouseup", ()=> holding = false);
+btn.addEventListener("mouseleave", ()=> holding = false);
+btn.addEventListener("touchstart", ()=> holding = true);
+btn.addEventListener("touchend", ()=> holding = false);
 
-/* start */
-startLight();
+resetGame();
 </script>
 
 </body>
