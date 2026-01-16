@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Story 10 – The Light of Hope</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  font-family:system-ui,sans-serif;
+  padding:20px;
+  background:linear-gradient(180deg,#fff6fb,#f0fbff);
+  max-width:620px;
+  margin:auto;
+}
+
+h1{
+  text-align:center;
+  margin-bottom:6px;
+}
+
+.sub{
+  text-align:center;
+  font-size:14px;
+  color:#666;
+  margin-bottom:20px;
+}
+
+.story{
+  background:white;
+  padding:18px;
+  border-radius:18px;
+  box-shadow:0 6px 14px rgba(0,0,0,.15);
+  font-size:18px;
+  line-height:1.7;
+}
+
+.sentence{
+  margin-bottom:10px;
+  cursor:pointer;
+}
+
+.sentence:active{
+  background:#fff0f6;
+  border-radius:8px;
+}
+
+.controls{
+  text-align:center;
+  margin-top:18px;
+}
+
+button,a{
+  display:inline-block;
+  margin:6px;
+  padding:12px 18px;
+  border:none;
+  border-radius:14px;
+  font-size:16px;
+  background:white;
+  text-decoration:none;
+  color:#333;
+  box-shadow:0 4px 10px rgba(0,0,0,.2);
+  cursor:pointer;
+}
+
+button:active{
+  transform:scale(0.96);
+}
+
+.links{
+  margin-top:16px;
+}
+</style>
+</head>
+
+<body>
+
+<a href="index.html">← Back to Menu</a>
+
+<h1>📖 Story 10</h1>
+<div class="sub">The Light of Hope</div>
+
+<div class="story" id="story">
+
+  <div class="sentence" onclick="speak(this)">
+    Morning light filled the land after the long night.
+  </div>
+
+  <div class="sentence" onclick="speak(this)">
+    The forest was quiet, but no longer afraid.
+  </div>
+
+  <div class="sentence" onclick="speak(this)">
+    The guardian smiled and bowed deeply.
+  </div>
+
+  <div class="sentence" onclick="speak(this)">
+    “You have grown strong in heart,” the guardian said.
+  </div>
+
+  <div class="sentence" onclick="speak(this)">
+    The glowing stone slowly turned into warm light.
+  </div>
+
+  <div class="sentence" onclick="speak(this)">
+    That light spread across the land like sunshine.
+  </div>
+
+  <div class="sentence" onclick="speak(this)">
+    The child felt calm, brave, and kind.
+  </div>
+
+  <div class="sentence" onclick="speak(this)">
+    This journey was over, but many adventures waited ahead.
+  </div>
+
+  <div class="sentence" onclick="speak(this)">
+    With hope in their heart, the child stepped forward.
+  </div>
+
+  <div class="sentence" onclick="speak(this)">
+    And a new story was ready to begin.
+  </div>
+
+</div>
+
+<div class="controls">
+  <button onclick="readAll()">🔊 Read All</button>
+
+  <div class="links">
+    <a href="story1.html">Story 1</a>
+    <a href="story2.html">Story 2</a>
+    <a href="story3.html">Story 3</a>
+    <a href="story4.html">Story 4</a>
+    <a href="story5.html">Story 5</a>
+    <a href="story6.html">Story 6</a>
+    <a href="story7.html">Story 7</a>
+    <a href="story8.html">Story 8</a>
+    <a href="story9.html">Story 9</a>
+  </div>
+</div>
+
+<script>
+function createVoice(text){
+  const msg = new SpeechSynthesisUtterance(text);
+  msg.lang = "en-US";
+  msg.rate = 0.6;
+  msg.pitch = 1.4;
+  msg.volume = 1.0;
+
+  const voices = speechSynthesis.getVoices();
+  const soft = voices.find(v =>
+    v.lang.startsWith("en") &&
+    (v.name.includes("Female") || v.name.includes("Samantha"))
+  );
+
+  if(soft) msg.voice = soft;
+  return msg;
+}
+
+function speak(el){
+  speechSynthesis.cancel();
+  speechSynthesis.speak(createVoice(el.innerText));
+}
+
+function readAll(){
+  speechSynthesis.cancel();
+  const sentences = document.querySelectorAll(".sentence");
+  sentences.forEach((s,i)=>{
+    const msg = createVoice(s.innerText);
+    msg.startTime = i * 10;
+    speechSynthesis.speak(msg);
+  });
+}
+</script>
+
+</body>
+</html>
