@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adjective Game Hub</title>
+<style>
+body { font-family: system-ui, sans-serif; padding: 20px; background:#f0f8ff; }
+h1 { text-align: center; }
+.tabs { display:flex; margin-bottom:20px; cursor:pointer; }
+.tab { flex:1; padding:10px; text-align:center; background:#ddd; margin-right:2px; border-radius:5px; }
+.tab.active { background:#87ceeb; font-weight:bold; }
+.game { display:none; }
+.game.active { display:block; }
+button { padding:10px 15px; margin:5px; font-size:16px; cursor:pointer; border-radius:5px; }
+.word-box { margin:10px 0; }
+.score { margin-top:10px; font-weight:bold; }
+.draggable { display:inline-block; padding:10px; margin:5px; background:#fff; border:1px solid #aaa; border-radius:5px; cursor:grab; }
+.dropzone { display:inline-block; padding:10px 20px; margin:5px; background:#eee; border:2px dashed #aaa; border-radius:5px; min-width:80px; text-align:center; }
+</style>
+</head>
+<body>
+
+<h1>Adjective Games</h1>
+<div class="tabs">
+  <div class="tab active" data-game="game1">1: Adjective or Not</div>
+  <div class="tab" data-game="game2">2: Adjective分類</div>
+  <div class="tab" data-game="game3">3: 文中Adjective</div>
+  <div class="tab" data-game="game4">4: 穴埋め</div>
+</div>
+
+<!-- 1: Adjective or Not -->
+<div id="game1" class="game active">
+  <h2>Adjective or Not?</h2>
+  <div class="word-box" id="word1">Loading...</div>
+  <button onclick="check1(true)">Adjective</button>
+  <button onclick="check1(false)">Not Adjective</button>
+  <div class="score" id="score1">Score: 0</div>
+</div>
+
+<!-- 2: Adjective分類 -->
+<div id="game2" class="game">
+  <h2>Adjective分類</h2>
+  <div id="draggables2"></div>
+  <div id="dropzones2"></div>
+  <div class="score" id="score2">Score: 0</div>
+</div>
+
+<!-- 3: 文中Adjective -->
+<div id="game3" class="game">
+  <h2>文中からAdjectiveを選ぶ</h2>
+  <div id="sentence3"></div>
+  <div class="score" id="score3">Score: 0</div>
+</div>
+
+<!-- 4: 穴埋め -->
+<div id="game4" class="game">
+  <h2>穴埋め</h2>
+  <div id="sentence4"></div>
+  <div id="options4"></div>
+  <div class="score" id="score4">Score: 0</div>
+</div>
+
+<script>
+// ----- タブ切り替え -----
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.game').forEach(g=>g.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.game).classList.add('active');
+  });
+});
+
+// -------- 1: Adjective or Not --------
+const words1 = [
+  {word:"big", adj:true}, {word:"apple", adj:false}, {word:"happy", adj:true}, {word:"run", adj:false},
+  {word:"red", adj:true}, {word:"dog", adj:false}, {word:"clean", adj:true}, {word:"sing", adj:false}
+];
+let score1 = 0;
+let current1;
+function nextWord1(){
+  current1 = words1[Math.floor(Math.random()*words1.length)];
+  document.getElementById('word1').textContent = current1.word;
+}
+function check1(ans){
+  if(ans === current1.adj) score1++;
+  document.getElementById('score1').textContent = "Score: " + score1;
+  nextWord1();
+}
+nextWord1();
+
+// -------- 2: Adjective分類 --------
+const adj2 = [
+  {word:"big", type:"Size"}, {word:"small", type:"Size"},
+  {word:"red", type:"Color"}, {word:"blue", type:"Color"},
+  {word:"happy", type:"Feeling"}, {word:"sad", type:"Feeling"},
+  {word:"good", type:"Opinion"}, {word:"bad", type:"Opinion"},
+  {word:"clean", type:"Condition"}, {word:"dirty", type:"Condition"}
+];
+const types2 = ["Size","Color","Feeling","Opinion","Condition"];
+let score2 = 0;
+
+function init2(){
+  const dragDiv = document.getElementById('draggables2');
+  dragDiv.innerHTML = '';
+  adj2.forEach(a=>{
+    const d = document.createElement('div');
+    d.textContent = a.word;
+    d.className = 'draggable';
+    d.draggable = true;
+    d.dataset.type = a.type;
+    d.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text', a.type); e.target.style.opacity=0.5; });
+    d.addEventListener('dragend', e=>{ e.target.style.opacity=1; });
+    dragDiv.appendChild(d);
+  });
+
+  const dropDiv = document.getElementById('dropzones2');
+  dropDiv.innerHTML = '';
+  types2.forEach(t=>{
+    const dz = document.createElement('div');
+    dz.textContent = t;
+    dz.className = 'dropzone';
+    dz.addEventListener('dragover', e=>e.preventDefault());
+    dz.addEventListener('drop', e=>{
+      e.preventDefault();
+      const type = e.dataTransfer.getData('text');
+      if(type===t){ score2++; e.target.style.background='#90ee90'; setTimeout(()=>e.target.style.background='#eee',500); }
+      document.getElementById('score2').textContent="Score: "+score2;
+    });
+    dropDiv.appendChild(dz);
+  });
+}
+init2();
+
+// -------- 3: 文中Adjective --------
+const sentences3 = [
+  {text:"The happy dog is big.", adjectives:["happy","big"]},
+  {text:"A small red apple.", adjectives:["small","red"]},
+  {text:"She feels sad today.", adjectives:["sad"]},
+  {text:"Clean water is important.", adjectives:["Clean"]}
+];
+let score3 = 0;
+let current3;
+
+function next3(){
+  current3 = sentences3[Math.floor(Math.random()*sentences3.length)];
+  const sentenceDiv = document.getElementById('sentence3');
+  sentenceDiv.innerHTML = '';
+  current3.text.split(' ').forEach(word=>{
+    const w = document.createElement('span');
+    w.textContent = word;
+    w.style.padding='5px';
+    w.style.cursor='pointer';
+    w.style.border='1px solid #ccc';
+    w.style.marginRight='3px';
+    if(current3.adjectives.includes(word.replace(/[^a-zA-Z]/g,''))){
+      w.onclick = ()=>{
+        score3++; w.style.background='#90ee90';
+        document.getElementById('score3').textContent="Score: "+score3;
+      }
+    } else {
+      w.onclick = ()=>{ w.style.background='#ff7f7f'; }
+    }
+    sentenceDiv.appendChild(w);
+  });
+}
+next3();
+document.getElementById('sentence3').addEventListener('click', next3);
+
+// -------- 4: 穴埋め --------
+const sentences4 = [
+  {text:"This is a ___ apple.", answer:"red", options:["red","run","quickly"]},
+  {text:"She has a ___ dog.", answer:"big", options:["big","sing","slow"]},
+  {text:"It is a ___ day.", answer:"happy", options:["happy","clean","jump"]}
+];
+let score4 = 0;
+let current4;
+function next4(){
+  current4 = sentences4[Math.floor(Math.random()*sentences4.length)];
+  document.getElementById('sentence4').textContent=current4.text;
+  const optsDiv = document.getElementById('options4');
+  optsDiv.innerHTML = '';
+  current4.options.forEach(opt=>{
+    const b = document.createElement('button');
+    b.textContent=opt;
+    b.onclick=()=>{
+      if(opt===current4.answer){ score4++; b.style.background='#90ee90'; }
+      else{ b.style.background='#ff7f7f'; }
+      document.getElementById('score4').textContent="Score: "+score4;
+      setTimeout(next4,500);
+    }
+    optsDiv.appendChild(b);
+  });
+}
+next4();
+</script>
+
+</body>
+</html>
