@@ -1,96 +1,157 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
 <meta charset="UTF-8">
+<title>Adjective Game 1</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Adjective Judge</title>
+
 <style>
-body{font-family:system-ui;text-align:center;background:#f0f8ff;padding:20px}
-.word{font-size:32px;font-weight:bold;margin:20px}
-button{padding:16px 24px;margin:10px;font-size:18px;border-radius:12px}
-.result{font-size:22px;margin-top:12px}
-.score{font-weight:bold;margin-top:10px}
+body{
+  font-family: system-ui, sans-serif;
+  background:#f7fbff;
+  text-align:center;
+  padding:20px;
+}
+h1{font-size:24px}
+.word{
+  font-size:36px;
+  margin:30px 0;
+}
+.buttons{
+  display:flex;
+  justify-content:center;
+  gap:20px;
+}
+button{
+  font-size:20px;
+  padding:15px 25px;
+  border-radius:12px;
+  border:none;
+  cursor:pointer;
+}
+.correct{background:#4caf50;color:white}
+.wrong{background:#f44336;color:white}
+.score{
+  margin-top:20px;
+  font-size:18px;
+}
+.menu{
+  margin-top:30px;
+}
+.menu a{
+  text-decoration:none;
+  color:#007aff;
+  font-size:16px;
+}
 </style>
 </head>
+
 <body>
 
-<h1>Adjective or Not</h1>
+<h1>Adjective Game 1</h1>
 
-<div id="word" class="word"></div>
+<div class="word" id="word">---</div>
 
-<button id="yes">Adjective</button>
-<button id="no">Not Adjective</button>
+<div class="buttons">
+  <button class="correct" onclick="answer(true)">Adjective</button>
+  <button class="wrong" onclick="answer(false)">Not Adjective</button>
+</div>
 
-<div id="result" class="result"></div>
-<div id="score" class="score">Score: 0</div>
+<div class="score">
+  Score: <span id="score">0</span> / <span id="total">0</span>
+</div>
+
+<div class="menu">
+  <a href="index.html">← メニューに戻る</a>
+</div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+/* ===== 音声 ===== */
+const speakCorrect = () => {
+  speechSynthesis.cancel();
+  speechSynthesis.speak(new SpeechSynthesisUtterance("Correct"));
+};
+const speakWrong = () => {
+  speechSynthesis.cancel();
+  speechSynthesis.speak(new SpeechSynthesisUtterance("Wrong"));
+};
 
-  const words = [
-    {w:"happy",a:true},{w:"angry",a:true},{w:"noisy",a:true},
-    {w:"quiet",a:true},{w:"clean",a:true},{w:"dirty",a:true},
-    {w:"brave",a:true},{w:"careful",a:true},{w:"safe",a:true},
-    {w:"dangerous",a:true},
-    {w:"apple",a:false},{w:"run",a:false},{w:"dog",a:false},
-    {w:"sing",a:false},{w:"book",a:false},{w:"teacher",a:false}
-  ];
+/* ===== 単語データ（90語以上）===== */
+const words = [
+  // adjectives
+  {w:"happy",a:true},{w:"sad",a:true},{w:"angry",a:true},{w:"tired",a:true},
+  {w:"excited",a:true},{w:"quiet",a:true},{w:"noisy",a:true},{w:"kind",a:true},
+  {w:"mean",a:true},{w:"brave",a:true},{w:"careful",a:true},{w:"dangerous",a:true},
+  {w:"safe",a:true},{w:"clean",a:true},{w:"dirty",a:true},{w:"fast",a:true},
+  {w:"slow",a:true},{w:"heavy",a:true},{w:"light",a:true},{w:"strong",a:true},
+  {w:"weak",a:true},{w:"tall",a:true},{w:"short",a:true},{w:"wide",a:true},
+  {w:"narrow",a:true},{w:"early",a:true},{w:"late",a:true},{w:"easy",a:true},
+  {w:"difficult",a:true},{w:"interesting",a:true},{w:"boring",a:true},
+  {w:"famous",a:true},{w:"popular",a:true},{w:"useful",a:true},
+  {w:"helpful",a:true},{w:"friendly",a:true},{w:"polite",a:true},
+  {w:"rude",a:true},{w:"healthy",a:true},{w:"sick",a:true},
+  {w:"delicious",a:true},{w:"terrible",a:true},{w:"bright",a:true},
+  {w:"dark",a:true},{w:"soft",a:true},{w:"hard",a:true},
 
-  let list = [];
-  let index = 0;
-  let score = 0;
-  let locked = false;
+  // not adjectives
+  {w:"run",a:false},{w:"eat",a:false},{w:"jump",a:false},{w:"teacher",a:false},
+  {w:"student",a:false},{w:"school",a:false},{w:"apple",a:false},
+  {w:"music",a:false},{w:"play",a:false},{w:"study",a:false},
+  {w:"book",a:false},{w:"pen",a:false},{w:"city",a:false},
+  {w:"river",a:false},{w:"computer",a:false},{w:"phone",a:false},
+  {w:"drive",a:false},{w:"swim",a:false},{w:"house",a:false},
+  {w:"friend",a:false},{w:"family",a:false},{w:"doctor",a:false},
+  {w:"market",a:false},{w:"food",a:false},{w:"game",a:false}
+];
 
-  const wordEl = document.getElementById("word");
-  const resultEl = document.getElementById("result");
-  const scoreEl = document.getElementById("score");
+/* ===== シャッフル ===== */
+for(let i=words.length-1;i>0;i--){
+  const j=Math.floor(Math.random()*(i+1));
+  [words[i],words[j]]=[words[j],words[i]];
+}
 
-  function speak(text){
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "en-US";
-    speechSynthesis.speak(u);
+/* ===== 状態 ===== */
+let index = 0;
+let score = 0;
+let lock = false;
+
+const wordEl = document.getElementById("word");
+const scoreEl = document.getElementById("score");
+const totalEl = document.getElementById("total");
+
+totalEl.textContent = words.length;
+
+/* ===== 表示 ===== */
+function showWord(){
+  lock = false;
+  if(index >= words.length){
+    wordEl.textContent = "Finished!";
+    return;
+  }
+  wordEl.textContent = words[index].w;
+}
+
+/* ===== 回答 ===== */
+function answer(choice){
+  if(lock) return;
+  lock = true;
+
+  const correct = words[index].a === choice;
+
+  if(correct){
+    score++;
+    scoreEl.textContent = score;
+    speakCorrect();
+  }else{
+    speakWrong();
   }
 
-  function shuffle(){
-    list = [...words].sort(()=>Math.random()-0.5);
-    index = 0;
-  }
+  index++;
+  setTimeout(showWord, 600);
+}
 
-  function show(){
-    locked = false;
-    if(index >= list.length) shuffle();
-    wordEl.textContent = list[index].w;
-    resultEl.textContent = "";
-  }
-
-  function judge(ans){
-    if(locked) return;
-    locked = true;
-
-    const correct = list[index].a === ans;
-    if(correct){
-      score++;
-      resultEl.textContent = "Correct!";
-      resultEl.style.color = "green";
-      speak("Correct");
-    }else{
-      resultEl.textContent = "Wrong!";
-      resultEl.style.color = "red";
-      speak("Wrong");
-    }
-
-    scoreEl.textContent = "Score: " + score;
-    index++;
-    setTimeout(show, 600);
-  }
-
-  document.getElementById("yes").addEventListener("pointerup", ()=>judge(true));
-  document.getElementById("no").addEventListener("pointerup", ()=>judge(false));
-
-  shuffle();
-  show();
-});
+/* ===== 開始 ===== */
+showWord();
 </script>
 
 </body>
