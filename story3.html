@@ -127,11 +127,23 @@ button:active{
 </div>
 
 <script>
+let lastScrollY = 0;
+
+function saveScroll(){
+  lastScrollY = window.scrollY;
+}
+
+function restoreScroll(){
+  setTimeout(()=>{
+    window.scrollTo(0, lastScrollY);
+  }, 0);
+}
+
 function createVoice(text){
   const msg = new SpeechSynthesisUtterance(text);
   msg.lang = "en-US";
-  msg.rate = 0.6;
-  msg.pitch = 1.4;
+  msg.rate = 0.6;    // ゆっくり
+  msg.pitch = 1.4;  // やさしく・可愛らしく
   msg.volume = 1.0;
 
   const voices = speechSynthesis.getVoices();
@@ -145,18 +157,31 @@ function createVoice(text){
 }
 
 function speak(el){
+  saveScroll();
   speechSynthesis.cancel();
   speechSynthesis.speak(createVoice(el.innerText));
+  restoreScroll();
 }
 
 function readAll(){
+  saveScroll();
   speechSynthesis.cancel();
+
   const sentences = document.querySelectorAll(".sentence");
-  sentences.forEach((s,i)=>{
-    const msg = createVoice(s.innerText);
-    msg.startTime = i * 10;
+  let i = 0;
+
+  function readNext(){
+    if(i >= sentences.length) return;
+    const msg = createVoice(sentences[i].innerText);
+    msg.onend = ()=>{
+      i++;
+      readNext();
+    };
     speechSynthesis.speak(msg);
-  });
+  }
+
+  readNext();
+  restoreScroll();
 }
 </script>
 
