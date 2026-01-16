@@ -28,7 +28,6 @@ h1{text-align:center;margin-bottom:6px;}
 
 .word{
   cursor:pointer;
-  padding:2px 4px;
   border-radius:6px;
 }
 
@@ -92,6 +91,11 @@ With a brave heart and shaking hands, the child took one step forward.
 That was the moment the long journey began.
 </div>
 
+<!-- 🔊 全文読み上げ -->
+<div style="text-align:center;margin-top:14px;">
+  <button onclick="readAll()">🔊 Read All</button>
+</div>
+
 <div class="card">
   <div class="label">🔤 Word Checker</div>
   <input id="miniEng" placeholder="Tap a word or type…" oninput="miniProcess()">
@@ -107,7 +111,7 @@ That was the moment the long journey began.
 </div>
 
 <script>
-/* ===== Dictionary (Story1 完全対応) ===== */
+/* ===== Dictionary ===== */
 const dict={
 long:{jp:"長い",hira:"ながい"},
 ago:{jp:"以前",hira:"いぜん"},
@@ -131,10 +135,11 @@ heart:{jp:"心",hira:"こころ"},
 journey:{jp:"旅",hira:"たび"}
 };
 
-/* ===== 単語分解 & タップ対応 ===== */
+/* ===== 単語タップ化 ===== */
 const storyEl=document.getElementById("story");
-const words=storyEl.innerText.split(/(\s+)/);
-storyEl.innerHTML=words.map(w=>{
+const originalText=storyEl.innerText;
+
+storyEl.innerHTML=originalText.split(/(\s+)/).map(w=>{
   if(/\s+/.test(w)) return w;
   const clean=w.toLowerCase().replace(/[^a-z]/g,"");
   return `<span class="word" onclick="selectWord('${clean}')">${w}</span>`;
@@ -171,6 +176,14 @@ function speakJP(t){
   if(t==="—") return;
   const u=new SpeechSynthesisUtterance(t);
   u.lang="ja-JP";
+  speechSynthesis.speak(u);
+}
+
+function readAll(){
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(originalText);
+  u.lang="en-US";
+  u.rate=0.6;
   speechSynthesis.speak(u);
 }
 </script>
