@@ -9,22 +9,14 @@
 body{
   font-family:system-ui,sans-serif;
   padding:20px;
+  padding-bottom:180px;
   background:linear-gradient(180deg,#fff6fb,#f0fbff);
   max-width:620px;
   margin:auto;
 }
 
-h1{
-  text-align:center;
-  margin-bottom:6px;
-}
-
-.sub{
-  text-align:center;
-  font-size:14px;
-  color:#666;
-  margin-bottom:20px;
-}
+h1{text-align:center;margin-bottom:6px;}
+.sub{text-align:center;font-size:14px;color:#666;margin-bottom:20px;}
 
 .story{
   background:white;
@@ -32,22 +24,42 @@ h1{
   border-radius:18px;
   box-shadow:0 6px 14px rgba(0,0,0,.15);
   font-size:18px;
-  line-height:1.7;
+  line-height:1.8;
 }
 
-.sentence{
-  margin-bottom:10px;
+.word{
   cursor:pointer;
+  border-radius:6px;
+}
+.word:active{
+  background:#ffe4f1;
 }
 
-.sentence:active{
-  background:#fff0f6;
-  border-radius:8px;
+/* ===== Dictionary ===== */
+.card{
+  margin-top:22px;
+  background:white;
+  padding:16px;
+  border-radius:18px;
+  box-shadow:0 6px 14px rgba(0,0,0,.15);
+}
+
+.label{font-size:13px;color:#666;margin-top:10px;}
+.text,.hiragana{font-size:18px;margin-top:4px;}
+.hiragana{cursor:pointer;}
+
+input{
+  width:100%;
+  padding:10px;
+  font-size:16px;
+  border-radius:12px;
+  border:1px solid #ccc;
+  margin-top:6px;
 }
 
 .controls{
   text-align:center;
-  margin-top:18px;
+  margin-top:20px;
 }
 
 button,a{
@@ -61,15 +73,6 @@ button,a{
   text-decoration:none;
   color:#333;
   box-shadow:0 4px 10px rgba(0,0,0,.2);
-  cursor:pointer;
-}
-
-button:active{
-  transform:scale(0.96);
-}
-
-.links{
-  margin-top:16px;
 }
 </style>
 </head>
@@ -82,96 +85,160 @@ button:active{
 <div class="sub">The Light of Hope</div>
 
 <div class="story" id="story">
-
-  <div class="sentence" onclick="speak(this)">
-    Morning light filled the land after the long night.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    The forest was quiet, but no longer afraid.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    The guardian smiled and bowed deeply.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    “You have grown strong in heart,” the guardian said.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    The glowing stone slowly turned into warm light.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    That light spread across the land like sunshine.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    The child felt calm, brave, and kind.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    This journey was over, but many adventures waited ahead.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    With hope in their heart, the child stepped forward.
-  </div>
-
-  <div class="sentence" onclick="speak(this)">
-    And a new story was ready to begin.
-  </div>
-
+Morning light filled the land after the long night.
+The forest was quiet but no longer afraid.
+The guardian smiled and bowed deeply.
+You have grown strong in heart the guardian said.
+The glowing stone slowly turned into warm light.
+That light spread across the land like sunshine.
+The child felt calm brave and kind.
+This journey was over but many adventures waited ahead.
+With hope in their heart the child stepped forward.
+And a new story was ready to begin.
 </div>
 
 <div class="controls">
   <button onclick="readAll()">🔊 Read All</button>
+  <a href="story9.html">← Previous Story</a>
+  <a href="story1.html">Back to Story 1</a>
+</div>
 
-  <div class="links">
-    <a href="story1.html">Story 1</a>
-    <a href="story2.html">Story 2</a>
-    <a href="story3.html">Story 3</a>
-    <a href="story4.html">Story 4</a>
-    <a href="story5.html">Story 5</a>
-    <a href="story6.html">Story 6</a>
-    <a href="story7.html">Story 7</a>
-    <a href="story8.html">Story 8</a>
-    <a href="story9.html">Story 9</a>
-  </div>
+<div class="card">
+  <div class="label">🔤 Word Checker</div>
+  <input id="miniEng" placeholder="Tap a word or type…" oninput="miniProcess()">
+
+  <div class="label">Japanese</div>
+  <div class="text" id="miniJP">—</div>
+
+  <div class="label">Reading (Hiragana)</div>
+  <div class="hiragana" id="miniHira" onclick="speakJP(miniHira.innerText)">—</div>
+
+  <button onclick="speakEN()">🔊 English</button>
+  <button onclick="speakJP(miniJP.innerText)">🔊 日本語</button>
 </div>
 
 <script>
-function createVoice(text){
-  const msg = new SpeechSynthesisUtterance(text);
-  msg.lang = "en-US";
-  msg.rate = 0.6;
-  msg.pitch = 1.4;
-  msg.volume = 1.0;
+/* ===== Dictionary (Story10 全単語) ===== */
+const dict={
+morning:{jp:"朝",hira:"あさ"},
+light:{jp:"光",hira:"ひかり"},
+filled:{jp:"満たした",hira:"みたした"},
+the:{jp:"その",hira:"その"},
+land:{jp:"大地",hira:"だいち"},
+after:{jp:"〜のあとで",hira:"あとで"},
+long:{jp:"長い",hira:"ながい"},
+night:{jp:"夜",hira:"よる"},
+forest:{jp:"森",hira:"もり"},
+was:{jp:"〜だった",hira:"だった"},
+quiet:{jp:"静かな",hira:"しずかな"},
+but:{jp:"しかし",hira:"しかし"},
+no:{jp:"〜でない",hira:"ない"},
+longer:{jp:"もはや",hira:"もはや"},
+afraid:{jp:"怖がって",hira:"こわがって"},
+guardian:{jp:"守護者",hira:"しゅごしゃ"},
+smiled:{jp:"微笑んだ",hira:"ほほえんだ"},
+and:{jp:"そして",hira:"そして"},
+bowed:{jp:"おじぎした",hira:"おじぎした"},
+deeply:{jp:"深く",hira:"ふかく"},
+you:{jp:"あなたは",hira:"あなたは"},
+have:{jp:"〜してきた",hira:"してきた"},
+grown:{jp:"成長した",hira:"せいちょうした"},
+strong:{jp:"強い",hira:"つよい"},
+in:{jp:"〜の中で",hira:"なかで"},
+heart:{jp:"心",hira:"こころ"},
+said:{jp:"言った",hira:"いった"},
+glowing:{jp:"光る",hira:"ひかる"},
+stone:{jp:"石",hira:"いし"},
+slowly:{jp:"ゆっくり",hira:"ゆっくり"},
+turned:{jp:"変わった",hira:"かわった"},
+into:{jp:"〜に",hira:"に"},
+warm:{jp:"あたたかい",hira:"あたたかい"},
+that:{jp:"その",hira:"その"},
+spread:{jp:"広がった",hira:"ひろがった"},
+across:{jp:"〜一面に",hira:"いちめんに"},
+like:{jp:"〜のように",hira:"のように"},
+sunshine:{jp:"日差し",hira:"ひざし"},
+child:{jp:"子ども",hira:"こども"},
+felt:{jp:"感じた",hira:"かんじた"},
+calm:{jp:"落ち着いた",hira:"おちついた"},
+brave:{jp:"勇敢な",hira:"ゆうかんな"},
+kind:{jp:"やさしい",hira:"やさしい"},
+this:{jp:"この",hira:"この"},
+journey:{jp:"旅",hira:"たび"},
+over:{jp:"終わった",hira:"おわった"},
+many:{jp:"たくさんの",hira:"たくさんの"},
+adventures:{jp:"冒険",hira:"ぼうけん"},
+waited:{jp:"待っていた",hira:"まっていた"},
+ahead:{jp:"前に",hira:"まえに"},
+with:{jp:"〜とともに",hira:"とともに"},
+hope:{jp:"希望",hira:"きぼう"},
+their:{jp:"彼らの",hira:"かれらの"},
+stepped:{jp:"踏み出した",hira:"ふみだした"},
+forward:{jp:"前へ",hira:"まえへ"},
+new:{jp:"新しい",hira:"あたらしい"},
+story:{jp:"物語",hira:"ものがたり"},
+ready:{jp:"準備ができた",hira:"じゅんびができた"},
+begin:{jp:"始まる",hira:"はじまる"}
+};
 
-  const voices = speechSynthesis.getVoices();
-  const soft = voices.find(v =>
-    v.lang.startsWith("en") &&
-    (v.name.includes("Female") || v.name.includes("Samantha"))
-  );
+/* ===== Word Tap ===== */
+const storyEl=document.getElementById("story");
+const originalText=storyEl.innerText;
 
-  if(soft) msg.voice = soft;
-  return msg;
+storyEl.innerHTML=originalText.split(/(\s+)/).map(w=>{
+  if(/\s+/.test(w)) return w;
+  const clean=w.toLowerCase().replace(/[^a-z]/g,"");
+  return `<span class="word" onclick="selectWord('${clean}')">${w}</span>`;
+}).join("");
+
+function selectWord(w){
+  miniEng.value=w;
+  miniProcess();
+  speakEN();
 }
 
-function speak(el){
+/* ===== Dictionary ===== */
+function miniProcess(){
+  const w=miniEng.value.toLowerCase().trim();
+  if(dict[w]){
+    miniJP.innerText=dict[w].jp;
+    miniHira.innerText=dict[w].hira;
+  }else{
+    miniJP.innerText="—";
+    miniHira.innerText="—";
+  }
+}
+
+/* ===== Speech ===== */
+function gentleEN(text){
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="en-US";
+  u.rate=0.5;
+  u.pitch=1.3;
+  const v=speechSynthesis.getVoices().find(v=>v.lang.startsWith("en")&&v.name.includes("Female"));
+  if(v) u.voice=v;
+  return u;
+}
+
+function speakEN(){
+  if(!miniEng.value) return;
   speechSynthesis.cancel();
-  speechSynthesis.speak(createVoice(el.innerText));
+  speechSynthesis.speak(gentleEN(miniEng.value));
+}
+
+function speakJP(t){
+  if(t==="—") return;
+  const u=new SpeechSynthesisUtterance(t);
+  u.lang="ja-JP";
+  u.rate=0.5;
+  u.pitch=1.2;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
 }
 
 function readAll(){
   speechSynthesis.cancel();
-  const sentences = document.querySelectorAll(".sentence");
-  sentences.forEach((s,i)=>{
-    const msg = createVoice(s.innerText);
-    msg.startTime = i * 10;
-    speechSynthesis.speak(msg);
-  });
+  speechSynthesis.speak(gentleEN(originalText));
 }
 </script>
 
