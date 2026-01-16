@@ -6,67 +6,23 @@
 <title>Adjective Game Hub</title>
 
 <style>
-body{
-  font-family:system-ui,sans-serif;
-  background:#f0f8ff;
-  padding:20px;
-}
-h1{text-align:center;}
-.tabs{
-  display:flex;
-  flex-wrap:wrap;
-  margin-bottom:15px;
-}
-.tab{
-  flex:1;
-  padding:10px;
-  margin:2px;
-  background:#ddd;
-  border-radius:6px;
-  text-align:center;
-  cursor:pointer;
-}
-.tab.active{
-  background:#87ceeb;
-  font-weight:bold;
-}
-.game{display:none;}
-.game.active{display:block;}
-.word-box{
-  font-size:22px;
-  font-weight:bold;
-  margin:15px 0;
-}
-button{
-  padding:10px 16px;
-  font-size:16px;
-  margin:5px;
-  border-radius:6px;
-  cursor:pointer;
-}
-.score{
-  margin-top:10px;
-  font-weight:bold;
-}
-.feedback{
-  margin-top:8px;
-  font-size:18px;
-  min-height:24px;
-}
-.correct{color:#2e8b57;}
-.wrong{color:#cc0000;}
-.menu-btn{
-  margin-top:20px;
-  background:#555;
-  color:white;
-}
-span.word{
-  padding:6px;
-  margin:3px;
-  border:1px solid #ccc;
-  display:inline-block;
-  cursor:pointer;
-}
+body{font-family:system-ui,sans-serif;background:#f0f8ff;padding:20px}
+h1{text-align:center}
+.tabs{display:flex;flex-wrap:wrap;margin-bottom:15px}
+.tab{flex:1;padding:10px;margin:2px;background:#ddd;border-radius:6px;text-align:center}
+.tab.active{background:#87ceeb;font-weight:bold}
+.game{display:none}
+.game.active{display:block}
+.word-box{font-size:22px;font-weight:bold;margin:15px 0}
+button{padding:10px 16px;font-size:16px;margin:5px;border-radius:6px}
+.score{margin-top:10px;font-weight:bold}
+.feedback{margin-top:8px;font-size:18px;min-height:24px}
+.correct{color:#2e8b57}
+.wrong{color:#cc0000}
+.menu-btn{margin-top:20px;background:#555;color:#fff}
+.draggable{display:inline-block;padding:8px;margin:5px;border:1px solid #aaa;border-radius:6px;background:#fff}
+.dropzone{display:inline-block;padding:10px;margin:5px;border:2px dashed #aaa;border-radius:6px;min-width:90px}
+span.word{padding:6px;margin:3px;border:1px solid #ccc;display:inline-block}
 </style>
 </head>
 
@@ -84,12 +40,20 @@ span.word{
 
 <!-- Game 1 -->
 <div id="g1" class="game active">
-  <h2>Is it an adjective?</h2>
   <div class="word-box" id="w1"></div>
-  <button onclick="check1(true)">Adjective</button>
-  <button onclick="check1(false)">Not Adjective</button>
+  <button id="b1a">Adjective</button>
+  <button id="b1b">Not Adjective</button>
   <div id="f1" class="feedback"></div>
   <div id="s1" class="score">Score: 0</div>
+  <button class="menu-btn" onclick="goMenu()">Menu</button>
+</div>
+
+<!-- Game 2 -->
+<div id="g2" class="game">
+  <h2>Classify Adjectives</h2>
+  <div id="drag2"></div>
+  <div id="drop2"></div>
+  <div id="s2" class="score">Score: 0</div>
   <button class="menu-btn" onclick="goMenu()">Menu</button>
 </div>
 
@@ -103,7 +67,7 @@ span.word{
 
 <!-- Game 4 -->
 <div id="g4" class="game">
-  <h2>Choose the correct adjective</h2>
+  <h2>Choose the adjective</h2>
   <div id="sent4"></div>
   <div id="opts4"></div>
   <div id="s4" class="score">Score: 0</div>
@@ -112,27 +76,29 @@ span.word{
 
 <!-- Game 5 -->
 <div id="g5" class="game">
-  <h2>Speed Judge</h2>
   <div class="word-box" id="w5"></div>
-  <button onclick="check5(true)">Adjective</button>
-  <button onclick="check5(false)">Not Adjective</button>
+  <button id="b5a">Adjective</button>
+  <button id="b5b">Not Adjective</button>
   <div id="f5" class="feedback"></div>
   <div id="s5" class="score">Score: 0</div>
   <button class="menu-btn" onclick="goMenu()">Menu</button>
 </div>
 
 <script>
-// ---------- 共通 ----------
-const speak = t => {
+/* ---------- Common ---------- */
+const speak=t=>{
   speechSynthesis.cancel();
   speechSynthesis.speak(new SpeechSynthesisUtterance(t));
 };
 
 document.querySelectorAll('.tab').forEach(tab=>{
-  tab.addEventListener('click',()=>{
-    document.querySelectorAll('.tab,.game').forEach(e=>e.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById(tab.dataset.game).classList.add('active');
+  ['click','touchstart'].forEach(ev=>{
+    tab.addEventListener(ev,()=>{
+      document.querySelectorAll('.tab,.game').forEach(e=>e.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.game).classList.add('active');
+      if(tab.dataset.game==='g2') initGame2();
+    });
   });
 });
 
@@ -140,107 +106,128 @@ function goMenu(){
   document.querySelectorAll('.game').forEach(g=>g.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelector('.tab').classList.add('active');
-  document.getElementById('g1').classList.add('active');
+  g1.classList.add('active');
 }
 
-// ---------- 単語（EFL 小学生） ----------
+/* ---------- Vocabulary (EFL) ---------- */
 const words=[
-{w:"big",a:true},{w:"small",a:true},{w:"fast",a:true},{w:"slow",a:true},
-{w:"clean",a:true},{w:"dirty",a:true},{w:"happy",a:true},{w:"sad",a:true},
-{w:"angry",a:true},{w:"tired",a:true},{w:"kind",a:true},{w:"friendly",a:true},
-{w:"shy",a:true},{w:"brave",a:true},{w:"easy",a:true},{w:"difficult",a:true},
-{w:"early",a:true},{w:"late",a:true},{w:"hot",a:true},{w:"cold",a:true},
-{w:"full",a:true},{w:"empty",a:true},{w:"right",a:true},{w:"wrong",a:true},
-{w:"run",a:false},{w:"eat",a:false},{w:"jump",a:false},{w:"teacher",a:false},
-{w:"student",a:false},{w:"school",a:false},{w:"book",a:false},{w:"apple",a:false},
-{w:"quickly",a:false},{w:"and",a:false},{w:"because",a:false}
-];
+"big","small","fast","slow","clean","dirty","happy","sad","angry","tired",
+"kind","friendly","brave","shy","easy","difficult","early","late","hot","cold",
+"full","empty","strong","weak","loud","quiet","bright","dark","safe","dangerous",
+"run","eat","jump","teacher","student","school","book","apple","chair","dog"
+].map(w=>({w, a:!["run","eat","jump","teacher","student","school","book","apple","chair","dog"].includes(w)}));
 
-// ---------- Game1 ----------
+/* ---------- Game1 ---------- */
 let i1=0,s1=0;
-function next1(){
-  i1=Math.floor(Math.random()*words.length);
-  w1.textContent=words[i1].w;
-}
+function next1(){i1=Math.floor(Math.random()*words.length);w1.textContent=words[i1].w}
 function check1(ans){
   const ok=ans===words[i1].a;
-  f1.textContent=ok?"✅ Correct":"❌ Wrong";
+  f1.textContent=ok?"Correct":"Wrong";
   f1.className="feedback "+(ok?"correct":"wrong");
   speak(ok?"Correct":"Wrong");
-  if(ok)s1++;
-  s1.textContent="Score: "+s1;
+  if(ok)s1++; s1.textContent="Score: "+s1;
   setTimeout(next1,600);
 }
+['click','touchstart'].forEach(ev=>{
+  b1a.addEventListener(ev,()=>check1(true));
+  b1b.addEventListener(ev,()=>check1(false));
+});
 next1();
 
-// ---------- Game3 ----------
+/* ---------- Game2 ---------- */
+let s2=0;
+const types=["Size","Feeling"];
+function initGame2(){
+  drag2.innerHTML=""; drop2.innerHTML="";
+  words.filter(x=>x.a).slice(0,20).forEach(o=>{
+    const d=document.createElement("div");
+    d.className="draggable"; d.textContent=o.w;
+    d.draggable=true;
+    d.dataset.type=["big","small","strong","weak"].includes(o.w)?"Size":"Feeling";
+    d.addEventListener("dragstart",e=>e.dataTransfer.setData("t",d.dataset.type));
+    drag2.appendChild(d);
+  });
+  types.forEach(t=>{
+    const z=document.createElement("div");
+    z.className="dropzone"; z.textContent=t;
+    z.addEventListener("dragover",e=>e.preventDefault());
+    z.addEventListener("drop",e=>{
+      e.preventDefault();
+      if(e.dataTransfer.getData("t")===t){s2++; speak("Correct")}
+      else speak("Wrong");
+      s2.textContent="Score: "+s2;
+    });
+    drop2.appendChild(z);
+  });
+}
+
+/* ---------- Game3 ---------- */
 let s3=0;
 const sents3=[
-{text:"The happy dog is big.",adj:["happy","big"]},
-{text:"She feels tired today.",adj:["tired"]},
-{text:"It is a clean room.",adj:["clean"]}
+"The happy dog is big.","She feels tired today.","The room is clean and bright.",
+"It is a hot day.","He is a kind teacher."
 ];
 function next3(){
-  const o=sents3[Math.floor(Math.random()*sents3.length)];
+  const t=sents3[Math.floor(Math.random()*sents3.length)];
   sent3.innerHTML="";
-  o.text.split(" ").forEach(w=>{
+  t.split(" ").forEach(w=>{
     const c=w.replace(/[^a-z]/gi,"");
     const sp=document.createElement("span");
-    sp.className="word";
-    sp.textContent=w;
-    sp.onclick=()=>{
-      const ok=o.adj.includes(c);
-      sp.style.background=ok?"#90ee90":"#ff7f7f";
-      speak(ok?"Correct":"Wrong");
-      if(ok)s3++;
-      s3.textContent="Score: "+s3;
-      setTimeout(next3,700);
-    };
+    sp.className="word"; sp.textContent=w;
+    ['click','touchstart'].forEach(ev=>{
+      sp.addEventListener(ev,()=>{
+        const ok=words.find(x=>x.w===c)?.a;
+        sp.style.background=ok?"#90ee90":"#ff7f7f";
+        speak(ok?"Correct":"Wrong");
+        if(ok)s3++; s3.textContent="Score: "+s3;
+        setTimeout(next3,700);
+      });
+    });
     sent3.appendChild(sp);
   });
 }
 next3();
 
-// ---------- Game4 ----------
+/* ---------- Game4 ---------- */
 let s4=0;
 const sents4=[
-{text:"This is a ___ apple.",a:"red",o:["red","run","eat"]},
-{text:"She has a ___ dog.",a:"big",o:["big","jump","book"]}
+["This is a ___ dog.","big"],["It is a ___ room.","clean"],
+["She is ___ today.","happy"],["The box is ___ .","heavy"]
 ];
 function next4(){
   const q=sents4[Math.floor(Math.random()*sents4.length)];
-  sent4.textContent=q.text;
-  opts4.innerHTML="";
-  q.o.forEach(x=>{
+  sent4.textContent=q[0]; opts4.innerHTML="";
+  ["big","run","happy","clean"].forEach(o=>{
     const b=document.createElement("button");
-    b.textContent=x;
-    b.onclick=()=>{
-      const ok=x===q.a;
-      speak(ok?"Correct":"Wrong");
-      if(ok)s4++;
-      s4.textContent="Score: "+s4;
-      setTimeout(next4,700);
-    };
+    b.textContent=o;
+    ['click','touchstart'].forEach(ev=>{
+      b.addEventListener(ev,()=>{
+        const ok=o===q[1];
+        speak(ok?"Correct":"Wrong");
+        if(ok)s4++; s4.textContent="Score: "+s4;
+        setTimeout(next4,700);
+      });
+    });
     opts4.appendChild(b);
   });
 }
 next4();
 
-// ---------- Game5 ----------
+/* ---------- Game5 ---------- */
 let i5=0,s5=0;
-function next5(){
-  i5=Math.floor(Math.random()*words.length);
-  w5.textContent=words[i5].w;
-}
+function next5(){i5=Math.floor(Math.random()*words.length);w5.textContent=words[i5].w}
 function check5(ans){
   const ok=ans===words[i5].a;
-  f5.textContent=ok?"✅ Correct":"❌ Wrong";
+  f5.textContent=ok?"Correct":"Wrong";
   f5.className="feedback "+(ok?"correct":"wrong");
   speak(ok?"Correct":"Wrong");
-  if(ok)s5++;
-  s5.textContent="Score: "+s5;
+  if(ok)s5++; s5.textContent="Score: "+s5;
   setTimeout(next5,400);
 }
+['click','touchstart'].forEach(ev=>{
+  b5a.addEventListener(ev,()=>check5(true));
+  b5b.addEventListener(ev,()=>check5(false));
+});
 next5();
 </script>
 </body>
