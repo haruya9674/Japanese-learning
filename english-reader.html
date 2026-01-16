@@ -112,27 +112,29 @@ const dictionary = {
 };
 
 function process(){
-  const eng = document.getElementById("eng").value.toLowerCase().trim();
-  if(!eng){
+  const engText = eng.value.toLowerCase().trim();
+
+  if(!engText){
     jp.innerText = "—";
     hira.innerText = "—";
     return;
   }
 
-  if(dictionary[eng]){
-    jp.innerText = dictionary[eng].jp;
-    hira.innerText = dictionary[eng].hira;
+  if(dictionary[engText]){
+    jp.innerText = dictionary[engText].jp;
+    hira.innerText = dictionary[engText].hira;
   }else{
-    jp.innerText = "（意味を先生といっしょに考えてみよう）";
-    hira.innerText = "いみをいっしょにかんがえてみよう";
+    // ❌「（日本語の意味）」を出さない
+    // ✅ 自然な日本語とひらがなに変更
+    jp.innerText = "この英語の意味を考えてみよう";
+    hira.innerText = "このえいごのいみをかんがえてみよう";
   }
 }
 
 function speakEN(){
-  const t = eng.value;
-  if(!t) return;
+  if(!eng.value) return;
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(t);
+  const u = new SpeechSynthesisUtterance(eng.value);
   u.lang="en-US";
   u.rate=0.6;
   u.pitch=1.2;
